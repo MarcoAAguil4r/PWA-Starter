@@ -4,15 +4,37 @@
 
 ## 1. Problema y contexto
 
-Expliquen qué dificultad de inspección o mantenimiento resolverán, por qué importa la conectividad y qué queda fuera. Debe entenderse el problema sin conocer su equipo.
+Los técnicos de mantenimiento realizan rondas de inspección en laboratorios distribuidos en distintos edificios de la universidad, incluyendo zonas con cobertura celular deficiente o sin señal Wi-Fi, como  laboratorios químicos y áreas especializadas. Cuando un técnico detecta un hallazgo (por ejemplo, un equipo con falla o una condición de seguridad que atender) en una de esas zonas, no siempre puede registrarlo en el momento porque depende de una conexión activa. Esto provoca que los hallazgos se anoten después de memoria, en papel, o se pospongan hasta recuperar señal, lo que genera retrasos, registros incompletos y dificultad para dar seguimiento oportuno a equipos que requieren atención.
 
-Ejemplo de inicio: «Un registro interrumpido por la falta de conexión dificulta dar seguimiento a un hallazgo». Adapten y completen: no lo presenten como un diagnóstico real de la UTT sin evidencia.
+El producto busca resolver esa brecha: permitir que el registro y la consulta de inspecciones de mantenimiento no dependan de tener conexión en el instante exacto en que ocurre el hallazgo, y dar visibilidad centralizada del estado de los laboratorios tanto a quien hace la ronda como a quien supervisa desde una oficina.
+
+Queda fuera de este producto:
+
+Gestión de compras, repuestos o proveedores de mantenimiento.
+Integración con sistemas institucionales de activos o directorios (Active Directory/LDAP).
+Autenticación real de usuarios y control de accesos por rol (se documenta como requisito futuro; no se implementa esta semana).
+Funcionalidad offline y sincronización real (manifest, service worker, cola de sincronización): se describe como capacidad futura en la sección de escenarios y requisitos, pero no se construye en esta entrega.
+Notificaciones push y reportes automatizados hacia terceros.
 
 ## 2. Usuarios y escenarios
 
-Identifiquen a los usuarios y escriban al menos dos escenarios, uno con conectividad intermitente. En cada escenario indiquen situación inicial, acción y resultado esperado.
+Usuarios:
 
-Ejemplo de formato: «Una persona encargada de inspección detecta un hallazgo sin conexión; registra el hallazgo y espera conservarlo para enviarlo después». Es una capacidad futura, no una función exigida en Semana 1.
+Técnico de mantenimiento: realiza las rondas físicas de inspección, revisa el estado de los equipos y registra hallazgos. Trabaja principalmente desde smartphone o tablet, con frecuencia en zonas de conectividad limitada.
+Docente o encargado de laboratorio: usa el espacio en el día a día, consulta el estado de su laboratorio y puede reportar una incidencia que detecta fuera de una ronda formal. Accede desde tablet o laptop.
+Auditor o administrador: revisa el histórico de inspecciones, valida que los hallazgos marcados como críticos hayan sido atendidos y da seguimiento general al programa de mantenimiento. Accede típicamente desde una computadora de escritorio con conexión estable.
+
+Escenario 1 — con conexión estable
+
+Situación inicial: el auditor abre la aplicación desde su computadora de escritorio en la oficina, con conexión de red estable.
+Acción: consulta el listado de inspecciones recientes para identificar cuáles requieren atención.
+Resultado esperado: la pantalla muestra las inspecciones disponibles —como las tres inspecciones sintéticas del starter actual— cada una con responsable, fecha, número de hallazgos y estado, de modo que el auditor puede distinguir de un vistazo cuáles necesitan seguimiento.
+
+Escenario 2 — con conectividad intermitente
+
+Situación inicial: un técnico de mantenimiento realiza una ronda de inspección en el edificio B de industriales en laboratorios químicos, una zona sin cobertura Wi-Fi ni señal celular estable.
+Acción: durante la ronda detecta una falla en un equipo (por ejemplo, un extractor de gases) e intenta registrar el hallazgo en el formulario de inspección.
+Resultado esperado (capacidad futura, no implementada esta semana): el registro del hallazgo se guarda localmente en el dispositivo del técnico y queda marcado como "pendiente de sincronización"; al recuperar conexión, se sincroniza automáticamente con el servidor sin que el técnico tenga que volver a capturarlo ni pierda la información levantada en campo.
 
 ## 3. Requisitos funcionales
 
