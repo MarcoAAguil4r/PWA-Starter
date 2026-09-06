@@ -40,19 +40,32 @@ Resultado esperado (capacidad futura, no implementada esta semana): el registro 
 
 Describan acciones del producto vinculadas a sus escenarios. Cada requisito lleva identificador, acción, condición de aceptación y alcance temporal.
 
+## 3. Requisitos funcionales
+
 | ID | Acción del producto | Condición observable de aceptación | Ahora o futuro |
 |---|---|---|---|
-| RF-01 (ejemplo, adaptar) | Mostrar los registros sintéticos del starter | Al abrir la página se ven las tres inspecciones proporcionadas | Semana 1 |
-
-Un requisito como «gestionar inspecciones» necesita precisar qué acción y qué resultado se observarán. Agreguen los requisitos que cubran sus escenarios sin inventar que ya están implementados.
+| RF-01 | Mostrar el listado de inspecciones registradas en la pantalla principal | Al abrir la aplicación se ven las tres inspecciones sintéticas del starter, cada una en su propia tarjeta | Semana 1 |
+| RF-02 | Mostrar, por cada inspección, responsable, fecha, número de hallazgos y estado | En cada tarjeta del listado aparecen visibles los cuatro datos (ej. Técnico B, 2026-08-27, 2 hallazgos, "Requiere atención") | Semana 1 |
+| RF-03 | Distinguir visualmente el estado de una inspección ("Sin incidencias" vs "Requiere atención") | La etiqueta de estado usa color y texto distintos según el caso, visible sin abrir el detalle | Semana 1 |
+| RF-04 | Indicar un contador total de inspecciones registradas | La pantalla muestra el número total de registros (ej. "3 registros") junto al listado | Semana 1 |
+| RF-05 | Registrar un nuevo hallazgo durante una ronda de inspección mediante un formulario | Al llenar y enviar el formulario con datos válidos, aparece un nuevo registro en el listado con esos mismos valores | Futuro |
+| RF-06 | Guardar localmente un hallazgo capturado sin conexión y marcarlo como "pendiente de sincronización" | En modo sin conexión, al enviar el formulario el registro aparece en el dispositivo con la etiqueta "pendiente de sincronización", vinculado al Escenario 2 | Futuro |
+| RF-07 | Sincronizar automáticamente con el servidor los registros pendientes al recuperar conexión | Al restablecer la conexión, los registros marcados como pendientes cambian a "sincronizado" sin que el técnico los vuelva a capturar, sin duplicados | Futuro |
+| RF-08 | Permitir que un auditor marque un hallazgo crítico como atendido | Al marcar un hallazgo como atendido, su estado cambia y queda visible en el historial de la inspección correspondiente | Futuro |
 
 ## 4. Requisitos no funcionales
 
-Describan reproducibilidad, accesibilidad, seguridad, privacidad, rendimiento y operación offline futura. Para cada uno indiquen condición, método de comprobación y momento de validación. Declaren los supuestos de cualquier umbral propuesto.
+**Reproducibilidad (ahora).** En una copia limpia del repositorio, con Node 20.19+ y npm 10+ declarados, `npm ci` seguido de `npm run build` termina con código de salida 0. Se comprueba localmente y en la ejecución correspondiente de GitHub Actions, en cada entrega semanal antes de reportar el SHA final.
 
-Ejemplo: «En una copia limpia, con las versiones declaradas de Node y npm, `npm ci` y `npm run verify` terminan con código 0» (reproducibilidad actual).
+**Accesibilidad (ahora).** Las etiquetas de estado ("Sin incidencias", "Requiere atención") no dependen únicamente del color para transmitir su significado, ya que van acompañadas de texto; el contraste de texto sobre fondo cumple una relación mínima aproximada de 4.5:1 (referencia WCAG AA). Se comprueba con inspección manual y la herramienta de contraste de DevTools, al revisar la interfaz existente esta semana.
 
-Ejemplo de meta futura: «Con 100 registros sintéticos en el dispositivo de prueba declarado, el listado aparece en menos de 2 segundos; se medirá en cinco ejecuciones bajo la conexión definida». Esa cifra es ilustrativa, no un umbral impuesto ni un resultado ya medido.
+**Seguridad (futuro).** Cuando se implemente el formulario de registro de hallazgos (RF-05), la entrada del usuario se valida y sanea antes de guardarse, evitando datos malformados o inyección de código. Se comprobará con pruebas manuales de entrada inválida en la semana en que se construya el formulario.
+
+**Privacidad (ahora y futuro).** La aplicación no muestra ni almacena datos personales reales de estudiantes, docentes o personal; únicamente usa los identificadores, nombres de laboratorio y correos institucionales ficticios declarados en la sección 5. Se comprueba revisando el código y los datos de prueba antes de cada commit.
+
+**Rendimiento (futuro; cifra ilustrativa, no medida aún).** Con 100 registros sintéticos cargados, se propone que el listado de inspecciones se renderice en menos de 2 segundos bajo una conexión 4G simulada. Se medirá con la pestaña Performance de DevTools en cinco ejecuciones bajo la misma conexión, cuando se implemente la carga dinámica de datos (no aplica a los datos fijos de Semana 1).
+
+**Offline futuro.** Un hallazgo capturado sin conexión (Escenario 2) persiste en almacenamiento local del dispositivo del técnico y se sincroniza automáticamente al recuperar conexión, sin pérdida ni duplicación. Se comprobará simulando pérdida de conexión (modo avión o límite de red en DevTools), capturando un registro, reconectando y verificando que quede sincronizado exactamente una vez, en la semana en que se implemente manifest/service worker/cola de sincronización.
 
 ## 5. Datos sintéticos y límites
 
