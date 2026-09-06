@@ -36,8 +36,32 @@ Ejemplo de meta futura: «Con 100 registros sintéticos en el dispositivo de pru
 
 Indiquen qué campos ficticios usa la aplicación y qué información real excluyen. No incluyan datos reales de estudiantes ni credenciales. La identificación académica de los integrantes se registra solo en la evidencia del repositorio privado y Classroom.
 
+### Datos Ficticios Utilizados
+Para el desarrollo y pruebas de la plataforma se utilizarán exclusivamente conjuntos de datos sintéticos representativos del entorno universitario:
+* **Catálogo de Laboratorios y Espacios:** Nombres simulados (ej. *Laboratorio de Química Orgánica Q-102*, *Lab de Cómputo Multiplataforma L-05*), ubicaciones por edificio/planta ficticios y responsables asignados con identificadores simulados.
+* **Inventario de Equipos y Activos:** Equipos de prueba con números de serie generados artificialmente (ej. *AUT-EQ-9812*), marcas, modelos, estados operativos (*Operativo*, *Requiere Calibración*, *Baja*) y fechas de mantenimiento simuladas.
+* **Usuarios y Credenciales:** Cuentas de prueba para roles de Técnico de Mantenimiento, Docente/Encargado de Laboratorio y Auditor de Seguridad con correos de dominio institucional ficticio (ej. `tecnico.test@universidad.edu.mx`).
+* **Registros de Inspección y Fallas:** Reportes de incidentes, listas de verificación de seguridad, bitácoras de mantenimiento preventivo/correctivo y fotografías de muestra libres de derechos.
+
+### Datos Reales Excluidos
+Por directivas de privacidad, seguridad institucional y alcance del proyecto, queda estrictamente fuera del sistema:
+* **Credenciales de Acceso Institucional:** Contraseñas reales, tokens activos de SSO universitario o accesos a directorios activos corporativos (Active Directory / LDAP institucional).
+* **Información Personalmente Identificable (PII) Real:** Nombres completos reales, números de teléfono, correos personales o números de empleado/estudiante reales.
+* **Inventario Crítico / Clasificado:** Datos reales de sustancias químicas restringidas, material biológico peligroso o planos clasificados de infraestructura universitaria.
+* **Firmas Digitales / Métricas Oficiales:** Firmas oficiales con validez legal o registros de auditorías estatales/nacionales reales.
+
+
+
 ## 6. Criterios de aceptación de la Semana 1
 
 Relacionen cada entrega actual con una inspección o comando. Distingan la comprobación técnica del juicio sobre contenido.
 
 Ejemplos: prueba del starter → `npm test`; build → `npm run build`; requisitos verificables → revisión del documento; comparación de alternativas → revisión de `docs/decision-record.md`. No afirmen que `npm run verify` valida la calidad del análisis.
+
+
+ prueba del starter → `npm test`; 
+ instalación limpia y rapida de dependencias → `npm ci`;
+ build → `npm run build`; 
+ requisitos verificables → revisión del documento; 
+ comparación de alternativas → revisión de `docs/decision-record.md`. 
+ 
