@@ -61,4 +61,29 @@
 - **Uso de IA:** 
   Utilicé Gemini como asistente para estructurar la comparativa técnica del ADR y organizar la redacción de los criterios de aceptación y especificaciones de datos sintéticos. Realicé revisión crítica, ajuste contextual y validación manual de todo el contenido para asegurar su coherencia con el alcance del proyecto.
 
+## Dulce Acevedo Miguel
+
+- **Mi contribución concreta y enlace:** 
+  Redacción de las secciones "3. Requisitos funcionales" y "4. Requisitos no funcionales" en `docs/requirements.md`. Definí 8 requisitos funcionales (RF-01 a RF-08) vinculados a los dos escenarios ya definidos por el equipo, y los 6 requisitos no funcionales (reproducibilidad, accesibilidad, seguridad, privacidad, rendimiento y offline futuro) con su condición, método de comprobación y momento de validación.
+  Enlace al commit: https://github.com/MarcoAAguil4r/PWA-Starter/commit/9bbd722.
+
+- **Decisión que puedo explicar y por qué:** 
+  Marqué los RF-05 a RF-08 (registro de hallazgos, guardado local, sincronización automática y marcar hallazgo como atendido) como "Futuro" y no como implementados en Semana 1, porque el starter actual solo muestra las tres inspecciones sintéticas en modo de solo lectura —no existe todavía un formulario de captura— y la actividad indica explícitamente que no se exige implementar offline, sincronización ni formularios nuevos esta semana. Documentarlos así deja clara su relación con el Escenario 2 sin afirmar una funcionalidad que aún no existe.
+
+- **Comando o prueba proporcionada que ejecuté:** 
+  `npm ci` y `npm run verify`.
+
+- **Resultado real que observé:** 
+  - `npm ci`: Instaló 28 paquetes correctamente usando el lockfile, con 2 vulnerabilidades de severidad alta reportadas por npm audit (propias de las dependencias del starter, no modificadas por mí).
+  - `npm run verify`: Ejecutó primero `npm test`, que corrió `tests/starter.spec.mjs` con resultado **PASS**. Después ejecutó `next build`, que compiló exitosamente con Next.js 14.2.35, generó las 4 páginas estáticas del proyecto (`/` y `/_not-found`) y terminó con el mensaje "Verificación técnica: pass. Revisión académica: pendiente." El reporte se guardó en `reports/verification.json`.
+
+- **Qué verifica esa prueba y qué no verifica:** 
+  `npm run verify` comprueba que el proyecto instala, que la prueba proporcionada del starter pasa y que el proyecto compila correctamente para producción. NO evalúa si mis requisitos funcionales o no funcionales están bien redactados, son completos o son coherentes con los escenarios del equipo — eso se revisa por lectura del documento, no por el resultado técnico del comando.
+
+- **Limitación, dificultad o riesgo que identifiqué:** 
+  Los requisitos no funcionales de rendimiento que propuse (ej. tiempo de carga con 100 registros) son cifras ilustrativas, no mediciones reales, porque el starter aún no maneja datos dinámicos ni un volumen real de inspecciones; quedan sujetas a validarse cuando esa funcionalidad exista.
+
+- **Uso de IA:** 
+  Utilicé Claude.ai como apoyo para redactar y dar formato a los requisitos funcionales y no funcionales, a partir de la información que yo misma proporcioné (el problema, los escenarios y usuarios ya definidos por mi equipo, y lo observado al correr el starter en `localhost:3000`). Revisé cada requisito antes de incluirlo para verificar que correspondiera a lo que realmente muestra el starter y a los escenarios acordados, y decidí yo misma cuáles marcar como "Semana 1" vs "Futuro" según el alcance real de la actividad.
+
 > No necesitan inventar un error ni escribir pruebas nuevas. «Ejecuté npm test» es insuficiente como explicación: indiquen qué observa la prueba y qué comportamiento queda fuera.
