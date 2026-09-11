@@ -34,6 +34,10 @@
 - **Uso de IA:** 
   Utilicé Claude.ai como asistente para estructurar y pulir la redacción inicial de los escenarios y la evidencia. Realicé verificación, ajuste y validación humana posterior de todo el contenido para asegurar que refleje fielmente la realidad y los límites de nuestro proyecto.
 
+### Evidencia individual de Semana 2 — David Aguilar Rodriguez
+
+
+
 ## Marco Antonio Aguilar Castillo
 
 - **Mi contribución concreta y enlace:** 

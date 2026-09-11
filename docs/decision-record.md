@@ -84,3 +84,11 @@ La validez de los supuestos arquitectónicos de este ADR se comprobará en las s
 ## Nota — Semana 2: manifest estático vs. dinámico
 
 Se agregó `public/manifest.webmanifest` como archivo estático porque la actividad lo exige como entregable literal. Se confirmó localmente que Next.js sirve el archivo estático de `public/` con prioridad sobre la ruta dinámica de `src/app/manifest.ts` cuando ambos existen — no hay conflicto de build, pero ambos deben mantenerse sincronizados manualmente mientras coexistan. `manifest.ts` se conserva porque las pruebas (`tests/manifest.spec.ts`) siguen validando su contenido como fuente de configuración.
+
+## Actualización — Semana 2: configuración y alcance actual
+
+Se mantiene **Next.js** y el App Router como base del proyecto. La configuración vigente del manifest se genera en `src/app/manifest.ts`, por lo que la fuente de configuración del equipo no debe duplicarse en un archivo `public/manifest.webmanifest`; el archivo estático heredado que aún existe en el repositorio debe revisarse con el equipo antes de una siguiente entrega para evitar dos fuentes de verdad.
+
+El shell de la interfaz se separó de `page.tsx` en `src/components/app-shell.tsx`. Esta separación concentra los landmarks de la página y la navegación principal sin alterar los datos sintéticos ni la pantalla principal.
+
+Esta decisión no implica funcionalidades offline reales: todavía no se implementan service worker, almacenamiento o sincronización. Esas capacidades requieren trabajo posterior y validación específica, como se describe en las limitaciones de este ADR.
