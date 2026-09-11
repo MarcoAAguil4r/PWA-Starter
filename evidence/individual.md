@@ -61,6 +61,18 @@
 - **Uso de IA:** 
   Utilicé Gemini como asistente para estructurar la comparativa técnica del ADR y organizar la redacción de los criterios de aceptación y especificaciones de datos sintéticos. Realicé revisión crítica, ajuste contextual y validación manual de todo el contenido para asegurar su coherencia con el alcance del proyecto.
 
+### Evidencia individual de Semana 2
+
+* **Estudiante:** Marco Antonio Aguilar Castillo
+* **Commit SHA evaluado:** `6dc1f8748ab06bb765262516a498e7b95b9bd45b`
+* **Contribución concreta:** Integré la configuración del manifest PWA en `src/app/manifest.ts`, verifiqué sus campos de instalación y moví los iconos sintéticos a `public/icons/`, que es la carpeta pública que Next.js expone en las rutas del manifest. También agregué las pruebas `tests/manifest.spec.mjs` y `tests/manifest.spec.ts`, y actualicé el comando `npm test` para ejecutar la prueba del manifest junto con la prueba existente del starter.
+* **Decisión técnica que puedo explicar:** Mantener `src/app/manifest.ts` como fuente del manifest mediante el App Router de Next.js permite generar la ruta `/manifest.webmanifest` sin duplicar la configuración. Los iconos se mantienen en `public/icons/` porque los recursos referenciados por `/icons/...` deben existir en la carpeta pública de Next.js. Esta entrega configura la instalación, pero no afirma implementar service worker, sincronización ni funcionamiento offline.
+* **Prueba que ejecuté y resultado:** Ejecuté `npm ci --ignore-scripts --no-audit --no-fund`, `npm test`, `npm run build`, `npm run verify` y `node scripts/verify.mjs --structure`. La instalación terminó correctamente; `starter.spec.mjs` y `manifest.spec.mjs` pasaron; el build de Next.js terminó correctamente y generó la ruta `/manifest.webmanifest`; `npm run verify` reportó `Verificación técnica: pass`; y la comprobación estructural terminó con `Estructura presente`.
+* **Qué verifica la prueba y qué no verifica:** Las pruebas comprueban los campos principales del manifest, las rutas de los iconos y la existencia de los archivos PNG. El build verifica que Next.js compile y genere la ruta del manifest. Estas comprobaciones no validan todavía la navegación completa del app shell, los estados de carga/error/vacío ni la instalación real en todos los navegadores.
+* **Limitación o fallo diagnosticado:** Los iconos inicialmente estaban en `src/public/icons`, una ubicación que no se publica como `/icons/...`; los moví a `public/icons/`. Además, el comando `bash public-tests/check.sh` no pudo ejecutarse en mi entorno Windows porque Bash no estaba instalado; ejecuté su equivalente multiplataforma `node scripts/verify.mjs --structure`. La integración completa aún depende de que se agregue `src/components/app-shell.tsx` y se resuelva el contrato del workflow sobre `public/manifest.webmanifest`.
+* **Cambio que podría defender o modificar en vivo:** Puedo explicar y modificar el manifest, sus iconos y las pruebas que detectan campos faltantes, rutas incorrectas o archivos inexistentes. También puedo demostrar por qué la ruta `/manifest.webmanifest` se genera desde `src/app/manifest.ts` durante el build.
+* **Uso declarado de IA:** Utilicé GitHub Copilot para revisar la estructura existente, identificar la ubicación incorrecta de los iconos, proponer la prueba del manifest y redactar esta evidencia. Revisé manualmente los cambios, ejecuté las pruebas, reinstalé las dependencias y confirmé el build antes de conservar la solución.
+
 ## Dulce Acevedo Miguel
 
 - **Mi contribución concreta y enlace:** 
