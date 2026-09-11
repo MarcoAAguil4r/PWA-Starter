@@ -6,6 +6,14 @@ const root = resolve(import.meta.dirname, "..");
 const read = (file) => readFileSync(resolve(root, file), "utf8");
 const manifest = read("src/app/manifest.ts");
 
+const validateManifest = (value) => {
+  assert.ok(value.start_url, "El manifest debe tener start_url.");
+  assert.equal(value.display, "standalone", "El manifest debe usar display standalone.");
+  for (const icon of value.icons) {
+    assert.ok(existsSync(resolve(root, "public", icon.src.slice(1))), `Debe existir ${icon.src}.`);
+  }
+};
+
 const manifestFields = [
   ["name", /name:\s*"Inspecciones de laboratorio"/],
   ["short_name", /short_name:\s*"Inspecciones"/],
@@ -28,9 +36,19 @@ for (const size of [192, 512]) {
   assert.ok(existsSync(resolve(root, "public/icons", icon)), `Debe existir public/icons/${icon}.`);
 }
 
+assert.throws(() => validateManifest({ display: "standalone", icons: [] }), /start_url/);
+assert.throws(() => validateManifest({ start_url: "/", display: "browser", icons: [] }), /standalone/);
+assert.throws(
+  () => validateManifest({ start_url: "/", display: "standalone", icons: [{ src: "/icons/missing.png" }] }),
+  /missing\.png/
+);
+console.log("manifest.spec.mjs: PASS (casos negativos)");
+
 console.log("manifest.spec.mjs: PASS (manifest e iconos)");
 
 const shell = read("src/components/app-shell.tsx");
+const layout = read("src/app/layout.tsx");
+assert.match(layout, /<AppShell\b/, "El layout debe incorporar el shell principal.");
 for (const landmark of ["header", "main", "footer"]) {
   assert.match(shell, new RegExp(`<${landmark}\\b`), `El shell debe incluir <${landmark}>.`);
 }

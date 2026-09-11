@@ -61,6 +61,7 @@ dd { font-size: .82rem; font-weight: 700; margin: 0; text-align: right; }
 .app-nav { margin: 18px 0 0; }
 .app-nav ul { display: flex; flex-wrap: wrap; gap: 14px; list-style: none; margin: 0; padding: 0; }
 .app-nav a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.app-nav a:focus-visible, .state-error button:focus-visible { outline: 3px solid #f0a202; outline-offset: 3px; }
 .nav-disabled { color: var(--muted); font-size: .9rem; }
 .state-error { background: var(--warning-soft); border-radius: 14px; color: var(--warning); padding: 20px; }
 .state-error button { background: var(--warning); border: none; border-radius: 8px; color: white; cursor: pointer; margin-top: 10px; padding: 8px 14px; }

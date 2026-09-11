@@ -27,7 +27,7 @@ GitHub Actions ejecuta la misma verificación y permite descargar el artefacto `
 
 ### Semana 2: manifest, shell y pruebas
 
-El entorno usado para esta actualización fue Node.js 20.19. En el entorno de verificación de esta actualización, `npm --version` no pudo ejecutarse porque `npm` no estaba disponible en `PATH`; se necesita una instalación de Node.js que incluya npm antes de ejecutar los comandos siguientes. Con el lockfile del repositorio, los comandos de trabajo son:
+La entrega requiere Node.js 20.19 o posterior y npm 10 o posterior. Con el lockfile del repositorio, los comandos reproducibles son:
 
 ```bash
 npm ci
@@ -38,9 +38,9 @@ npm run verify
 make verify
 ```
 
-Como comprobación adicional de estructura puede ejecutarse `bash public-tests/check.sh` en un entorno que disponga de Bash. `npm test` ejecuta la prueba base y `tests/manifest.spec.mjs`: confirma los campos del manifest generado, los iconos públicos, los landmarks y la navegación actual del shell, además de los estados de carga, error y vacío.
+Como comprobación adicional de estructura puede ejecutarse `bash public-tests/check.sh` en un entorno que disponga de Bash. `npm test` ejecuta la prueba base y `tests/manifest.spec.mjs`: confirma los campos del manifest, los iconos públicos, los landmarks, la incorporación del shell desde el layout, la navegación, los estados de carga/error/vacío y regresiones negativas de `start_url`, `display` e iconos.
 
-La interfaz sigue utilizando exclusivamente inspecciones sintéticas. El listado comunica carga mediante `role="status"`, error mediante `role="alert"` con opción **Reintentar**, y ausencia de registros con un texto explícito. Esta semana no implementa service worker, almacenamiento offline ni sincronización; el manifest permite describir la instalación, pero no proporciona esas capacidades por sí solo.
+La interfaz sigue utilizando exclusivamente inspecciones sintéticas. El listado comunica carga mediante `role="status"`, error mediante `role="alert"` con un botón **Reintentar** funcional, y ausencia de registros con un texto explícito. El shell usa landmarks accesibles, navegación por teclado y foco visible, y responde a viewport móvil y de escritorio. Esta semana no implementa service worker, almacenamiento offline ni sincronización; el manifest permite describir la instalación, pero no proporciona esas capacidades por sí solo.
 
 ## Trabajo y entrega en equipo
 

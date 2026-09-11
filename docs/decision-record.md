@@ -81,13 +81,9 @@ La validez de los supuestos arquitectónicos de este ADR se comprobará en las s
 2. **Auditoría de PWA con Lighthouse:** Alcanzar una puntuación aceptable en las categorías de PWA, Best Practices y Performance en emulación móvil.
 3. **Prueba de reanudación y sincronización:** Restablecer la conexión tras la captura local y comprobar que el Service Worker procese la cola de peticiones pendientes hacia el backend sin pérdida de datos.
 
-## Nota — Semana 2: manifest estático vs. dinámico
-
-Se agregó `public/manifest.webmanifest` como archivo estático porque la actividad lo exige como entregable literal. Se confirmó localmente que Next.js sirve el archivo estático de `public/` con prioridad sobre la ruta dinámica de `src/app/manifest.ts` cuando ambos existen — no hay conflicto de build, pero ambos deben mantenerse sincronizados manualmente mientras coexistan. `manifest.ts` se conserva porque las pruebas (`tests/manifest.spec.ts`) siguen validando su contenido como fuente de configuración.
-
 ## Actualización — Semana 2: configuración y alcance actual
 
-Se mantiene **Next.js** y el App Router como base del proyecto. La configuración vigente del manifest se genera en `src/app/manifest.ts`, por lo que la fuente de configuración del equipo no debe duplicarse en un archivo `public/manifest.webmanifest`; el archivo estático heredado que aún existe en el repositorio debe revisarse con el equipo antes de una siguiente entrega para evitar dos fuentes de verdad.
+Se mantiene **Next.js** y el App Router como base del proyecto. `src/app/manifest.ts` es la fuente única de configuración y genera `/manifest.webmanifest`. El archivo `public/manifest.webmanifest` se conserva únicamente como espejo estático exigido por el contrato de entrega; no se edita de forma independiente y debe coincidir con el manifest generado. Así se evita tratar ambos archivos como fuentes de verdad.
 
 El shell de la interfaz se separó de `page.tsx` en `src/components/app-shell.tsx`. Esta separación concentra los landmarks de la página y la navegación principal sin alterar los datos sintéticos ni la pantalla principal.
 

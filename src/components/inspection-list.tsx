@@ -1,3 +1,5 @@
+"use client";
+
 import type { inspections as InspectionsType } from "../lib/data/inspections";
 
 type Inspection = (typeof InspectionsType)[number];
@@ -18,7 +20,7 @@ export function InspectionList({ inspections, state = "exito", onRetry }: Props)
     return (
       <div role="alert" className="state-error">
         <p>No se pudieron cargar las inspecciones.</p>
-        <button type="button" onClick={onRetry}>
+        <button type="button" onClick={onRetry ?? (() => window.location.reload())}>
           Reintentar
         </button>
       </div>
