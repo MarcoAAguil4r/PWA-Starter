@@ -1,18 +1,14 @@
 import { inspections } from "../lib/data/inspections";
+import { AppShell } from "../components/app-shell";
+import { InspectionList } from "../components/inspection-list";
 
 export default function HomePage() {
   return (
-    <main className="page-shell">
-      <header className="hero">
-        <p className="eyebrow">Proyecto base · Semana 1</p>
-        <h1>Inspecciones de laboratorio</h1>
-        <p className="lead">
-          Registro de mantenimiento para trabajar con conectividad intermitente.
-          Los datos mostrados son sintéticos.
-        </p>
-        <span className="status">Estado del starter: ejecutable · PWA aún no implementada</span>
-      </header>
-
+    <AppShell
+      title="Inspecciones de laboratorio"
+      description="Registro de mantenimiento para trabajar con conectividad intermitente. Los datos mostrados son sintéticos."
+      statusLabel="Estado del starter: shell instalable · manifest configurado"
+    >
       <section aria-labelledby="inspections-heading" className="content-section">
         <div className="section-heading">
           <div>
@@ -22,33 +18,8 @@ export default function HomePage() {
           <span className="count">{inspections.length} registros</span>
         </div>
 
-        <div className="inspection-grid">
-          {inspections.map((inspection) => (
-            <article className="inspection-card" key={inspection.id}>
-              <div className="card-topline">
-                <span className={`badge badge-${inspection.status}`}>{inspection.statusLabel}</span>
-                <span className="muted">{inspection.date}</span>
-              </div>
-              <h3>{inspection.location}</h3>
-              <p>{inspection.summary}</p>
-              <dl>
-                <div>
-                  <dt>Responsable</dt>
-                  <dd>{inspection.inspector}</dd>
-                </div>
-                <div>
-                  <dt>Hallazgos</dt>
-                  <dd>{inspection.findings}</dd>
-                </div>
-              </dl>
-            </article>
-          ))}
-        </div>
+        <InspectionList inspections={inspections} />
       </section>
-
-      <footer className="footer">
-        <p>Aplicaciones Web Progresivas · Universidad Tecnológica de Tehuacán</p>
-      </footer>
-    </main>
+    </AppShell>
   );
 }
