@@ -80,3 +80,7 @@ La validez de los supuestos arquitectónicos de este ADR se comprobará en las s
 1. **Prueba de ciclo de vida offline:** Simular desconexión de red en DevTools (modo *Offline*), completar un formulario de inspección con datos sintéticos y verificar que la información persista al recargar la página.
 2. **Auditoría de PWA con Lighthouse:** Alcanzar una puntuación aceptable en las categorías de PWA, Best Practices y Performance en emulación móvil.
 3. **Prueba de reanudación y sincronización:** Restablecer la conexión tras la captura local y comprobar que el Service Worker procese la cola de peticiones pendientes hacia el backend sin pérdida de datos.
+
+## Nota — Semana 2: manifest estático vs. dinámico
+
+Se agregó `public/manifest.webmanifest` como archivo estático porque la actividad lo exige como entregable literal. Se confirmó localmente que Next.js sirve el archivo estático de `public/` con prioridad sobre la ruta dinámica de `src/app/manifest.ts` cuando ambos existen — no hay conflicto de build, pero ambos deben mantenerse sincronizados manualmente mientras coexistan. `manifest.ts` se conserva porque las pruebas (`tests/manifest.spec.ts`) siguen validando su contenido como fuente de configuración.
