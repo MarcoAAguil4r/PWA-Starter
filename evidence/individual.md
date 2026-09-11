@@ -36,7 +36,12 @@
 
 ### Evidencia individual de Semana 2 — David Aguilar Rodriguez
 
-
+- **Contribución concreta:** Actualicé `tests/manifest.spec.mjs` para verificar el manifest real, los iconos públicos, los landmarks y navegación reales de `app-shell.tsx`, y los estados visuales de `inspection-list.tsx`. También actualicé `scripts/verify.mjs`, README y este registro de evidencia.
+- **Decisión que puedo explicar:** La prueba se ajusta al contrato que el equipo implementó: comprueba las opciones de navegación existentes (`Inspecciones` y `Resumen (próximamente)`) y no exige una opción “Configuración” ni un skip link que no están en el shell. Así una falla señala una regresión real, no una expectativa inventada por la prueba.
+- **Comandos ejecutados y resultado real observado:** `node --version` devolvió `v24.19.0`. `node tests/manifest.spec.mjs` terminó correctamente y reportó PASS para manifest/iconos, landmarks/navegación y estados visuales. Intenté en orden `npm ci`, `npm test`, `npm run build` y `npm run verify`, pero todos quedaron bloqueados porque PowerShell informó que `npm` no se reconoce como comando. También intenté `bash public-tests/check.sh`; Bash devolvió `CreateInstance/E_ACCESSDENIED`. Por ello no afirmo resultados de instalación, build, verify ni prueba pública.
+- **Qué verifica y qué no verifica la prueba:** Verifica campos y rutas declarados en `src/app/manifest.ts`, la existencia física de ambos PNG, landmarks del shell, las dos opciones actuales de navegación y los mensajes/roles de los estados de carga, error y vacío. No verifica instalación en navegador, service worker, comportamiento offline, sincronización ni el aspecto visual en un dispositivo real.
+- **Limitación encontrada:** El repositorio conserva `public/manifest.webmanifest` además de `src/app/manifest.ts`. Mi alcance no autoriza modificarlo; queda como hallazgo para el equipo porque puede producir dos fuentes de verdad. Además, este entorno no expone npm ni permite iniciar Bash, lo que impidió la validación completa solicitada.
+- **Uso de IA:** Utilicé Codex como apoyo para inspeccionar los archivos reales, redactar pruebas deterministas y documentación, y ejecutar las comprobaciones disponibles. Revisé manualmente los textos, los patrones de las aserciones y la salida de los comandos; los resultados bloqueados se registran tal como ocurrieron.
 
 ## Marco Antonio Aguilar Castillo
 
