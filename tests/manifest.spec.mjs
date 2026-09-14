@@ -5,6 +5,18 @@ import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const read = (file) => readFileSync(resolve(root, file), "utf8");
 const manifest = read("src/app/manifest.ts");
+const publicManifest = JSON.parse(read("public/manifest.webmanifest"));
+
+assert.equal(publicManifest.name, "Inspecciones de laboratorio");
+assert.equal(publicManifest.short_name, "Inspecciones");
+assert.equal(publicManifest.start_url, "/");
+assert.equal(publicManifest.scope, "/");
+assert.equal(publicManifest.display, "standalone");
+assert.equal(publicManifest.lang, "es-MX");
+assert.deepEqual(
+  publicManifest.icons.map(({ src }) => src),
+  ["/icons/icon-192x192.png", "/icons/icon-512x512.png"]
+);
 
 const validateManifest = (value) => {
   assert.ok(value.start_url, "El manifest debe tener start_url.");
