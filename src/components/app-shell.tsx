@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ServiceWorkerRegistration } from "./service-worker-registration";
 
 interface AppShellProps {
   children: ReactNode;
@@ -9,7 +10,9 @@ interface AppShellProps {
 
 export function AppShell({ children, title, description, statusLabel }: AppShellProps) {
   return (
-    <div className="page-shell">
+    <>
+      <ServiceWorkerRegistration />
+      <div className="page-shell">
       <header className="hero">
         <p className="eyebrow">Proyecto base · Semana 2</p>
         <h1>{title}</h1>
@@ -33,6 +36,7 @@ export function AppShell({ children, title, description, statusLabel }: AppShell
       <footer className="footer">
         <p>Aplicaciones Web Progresivas · Universidad Tecnológica de Tehuacán</p>
       </footer>
-    </div>
+      </div>
+    </>
   );
 }

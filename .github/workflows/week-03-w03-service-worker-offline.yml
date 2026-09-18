@@ -1,0 +1,49 @@
+# Feedback formativo de la Actividad 3: service worker y consulta offline.
+# El workflow no sustituye la evaluación privada del instructor.
+name: Academic Evaluation Feedback - Week 03
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Install dependencies
+        shell: bash
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: AC-01 - Clean install and build
+        shell: bash
+        run: test -f package.json && test -f package-lock.json && npm run build --if-present
+      - name: AC-02 - Week 03 artifacts exist
+        shell: bash
+        run: |
+          test -e public/sw.js
+          test -e src/lib/pwa/register-service-worker.ts
+          test -e docs/cache-strategy.md
+          test -e tests/service-worker.spec.ts
+          test -e tests/offline.spec.ts
+      - name: AC-03 - Test suite runs
+        shell: bash
+        run: npm run test --if-present -- --run
+      - name: Public structure check
+        shell: bash
+        run: bash public-tests/check.sh
+      - name: Upload evaluation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: academic-evidence-w03-service-worker-offline
+          if-no-files-found: ignore
+          path: |
+            evaluation-result.json
+            coverage/
+            test-results/
