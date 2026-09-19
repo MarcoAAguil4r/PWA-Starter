@@ -124,5 +124,19 @@
 - **Limitación encontrada:** Al mover el título fuera de `page.tsx`, rompí inicialmente `starter.spec.mjs` (buscaba el texto literal ahí); lo resolví pasando el texto como props en vez de modificar la prueba base. Los 4 estados de `InspectionList` existen en el componente, pero la página solo fuerza el estado "éxito" con datos estáticos - no hay todavía fuente de datos real para demostrar los otros 3 en vivo.
 - **Uso de IA:** Utilicé Claude (Anthropic) para generar el código inicial de `app-shell.tsx` e `inspection-list.tsx` a partir de la estructura y estilos ya existentes, y para diagnosticar por qué se rompió `starter.spec.mjs` tras el refactor. Revisé manualmente cada archivo y corrí las pruebas hasta confirmar que pasaban, decidiendo yo misma cómo resolver el conflicto del texto.
 
+## Semana 3
+
+### David Aguilar Rodríguez 
+
+Contribución concreta: Creé tests/service-worker.spec.ts y tests/offline.spec.ts. Las pruebas ejecutan el contenido real de public/sw.js en un entorno aislado en memoria con Cache Storage, eventos y respuestas de red sintéticas; no modifican el worker ni usan red, credenciales o datos reales.
+Decisión técnica que puedo explicar: Modelé el contrato observable del worker actual, en vez de imponer otra estrategia: instalación/precache atómico, cache-first para iconos estáticos, network-first para navegaciones, limpieza de cachés pwa-* obsoletos y clients.claim(). Una versión nueva se simula exclusivamente en memoria para verificar que el ciclo install/activate invalida las cachés de la versión anterior.
+Pruebas ejecutadas y resultado real:
+node tests/service-worker.spec.ts: PASS — instalación, precache, runtime cache, actualización e invalidación.
+node tests/offline.spec.ts: FAIL intencional (Caso C) — detecta un defecto real en public/sw.js. Tras simular una respuesta HTTP 500 no cacheable y un fallo posterior de red, la navegación resolvió undefined en vez del fallback 503 esperado. Error: AssertionError: actual: undefined, expected: true.
+npm test: PASS — ejecuta starter.spec.mjs y manifest.spec.mjs. Los nuevos .spec.ts aún no están integrados al script.
+npm run build: PASS — Next.js 14.2.35 compila sin errores, genera páginas estáticas correctamente.
+Qué cubren y qué no cubren: Cubren el comportamiento de caché y recuperación del worker con respuestas, fallos y versiones sintéticos y deterministas. No sustituyen una prueba E2E en un navegador real ni prueban el registro visual del worker. Tampoco afirman sincronización de formularios o datos de inspecciones, porque el worker no la implementa.
+Limitación o fallo diagnosticado: El fallo reproducible pertenece a public/sw.js, fuera de mi alcance: en networkFirstNavigation, caches.match("/") se usa sin await dentro de cachedResponse || caches.match("/") || offlineFallback(). Una coincidencia de caché ausente puede resolver a undefined y evita el offlineFallback(). La modificación mínima para Integrante 1 sería evaluar esa coincidencia con await antes de aplicar el fallback. De acuerdo con las reglas del proyecto, no modifiqué public/sw.js ni ningún archivo fuera de mi alcance. Además, package.json sólo ejecuta los specs .mjs; los .ts se ejecutaron manualmente con Node 22, y el workflow actual sólo verifica que existan los archivos, por lo que no integra los dos specs nuevos en npm test/CI.
+Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, proponer el entorno aislado de pruebas y redactar las aserciones y esta evidencia. Validación humana: revisé manualmente el flujo del worker
 
 > No necesitan inventar un error ni escribir pruebas nuevas. «Ejecuté npm test» es insuficiente como explicación: indiquen qué observa la prueba y qué comportamiento queda fuera.
