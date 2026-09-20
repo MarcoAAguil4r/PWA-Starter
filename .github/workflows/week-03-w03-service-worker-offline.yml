@@ -17,6 +17,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.18.0
       - name: Install dependencies
         shell: bash
         run: npm ci --ignore-scripts --no-audit --no-fund
@@ -33,7 +37,7 @@ jobs:
           test -e tests/offline.spec.ts
       - name: AC-03 - Test suite runs
         shell: bash
-        run: npm run test --if-present -- --run
+        run: npm test
       - name: Public structure check
         shell: bash
         run: bash public-tests/check.sh

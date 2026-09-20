@@ -126,6 +126,15 @@
 
 ## Semana 3
 
+### Marco Antonio Aguilar Castillo
+
+- **Commit SHA evaluado:** Pendiente del commit final de esta integración; no se inventa un SHA.
+- **Contribución concreta:** Corregí el fallback de navegación en `public/sw.js` para esperar la coincidencia de `/` antes de decidir entre caché y respuesta 503. Integré los specs de Semana 3 en `package.json`, actualicé el requisito a Node 22.18 para ejecutar TypeScript nativamente, agregué sus artefactos al chequeo estructural de `scripts/verify.mjs` y al check público, y actualicé el workflow para ejecutar el mismo `npm test` con esa versión de Node.
+- **Decisión técnica que puedo explicar:** Mantener el fallback como respuesta HTML 503 cuando no exista ni la navegación solicitada ni `/` en caché evita devolver `undefined` ante una caída de red. Los specs TypeScript se ejecutan directamente con Node, sin agregar un runner o dependencia adicional, y se encadenan después de las pruebas de Semanas 1 y 2 para conservar su cobertura.
+- **Pruebas ejecutadas y resultado real:**  `node tests/service-worker.spec.ts` terminó en PASS y `node tests/offline.spec.ts` terminó en PASS después de la corrección. `node scripts/verify.mjs --structure` termina en PASS. `npm` no está disponible en este entorno, por lo que no afirmo resultados nuevos de `npm ci`, `npm test`, `npm run build`, `make verify` ni el script Bash.
+- **Limitación pendiente:** No se ejecutó una prueba E2E en navegador para registro, activación/espera de una actualización o la interfaz offline. La ejecución directa de `.ts` emitió una advertencia de tipo de módulo en Node v24.19.0; debe comprobarse en el entorno de entrega declarado por el proyecto.
+- **Uso declarado de IA:** Utilicé Codex para auditar el flujo existente, localizar la causa del fallback, preparar cambios mínimos de integración y revisar resultados. Validé manualmente el diff y ejecuté las comprobaciones de Node disponibles.
+
 ### David Aguilar Rodríguez 
 
 Contribución concreta: Creé tests/service-worker.spec.ts y tests/offline.spec.ts. Las pruebas ejecutan el contenido real de public/sw.js en un entorno aislado en memoria con Cache Storage, eventos y respuestas de red sintéticas; no modifican el worker ni usan red, credenciales o datos reales.

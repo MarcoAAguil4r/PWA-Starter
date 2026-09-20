@@ -72,7 +72,8 @@ async function networkFirstNavigation(request) {
     return response;
   } catch {
     const cachedResponse = await caches.match(request);
-    return cachedResponse || caches.match("/") || offlineFallback();
+    const fallbackResponse = await caches.match("/");
+    return cachedResponse || fallbackResponse || offlineFallback();
   }
 }
 

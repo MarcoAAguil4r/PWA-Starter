@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const root = resolve(import.meta.dirname, "..");
-const required = ["package.json", "package-lock.json", "README.md", "src/app/layout.tsx", "src/app/page.tsx", "src/app/globals.css", "src/lib/data/inspections.ts", "docs/requirements.md", "docs/decision-record.md", "tests/starter.spec.mjs", "evidence/individual.md", "src/components/app-shell.tsx", "src/app/manifest.ts", "public/icons/icon-192x192.png", "public/icons/icon-512x512.png", "tests/manifest.spec.mjs"];
+const required = ["package.json", "package-lock.json", "README.md", "src/app/layout.tsx", "src/app/page.tsx", "src/app/globals.css", "src/lib/data/inspections.ts", "docs/requirements.md", "docs/decision-record.md", "tests/starter.spec.mjs", "evidence/individual.md", "src/components/app-shell.tsx", "src/app/manifest.ts", "public/icons/icon-192x192.png", "public/icons/icon-512x512.png", "tests/manifest.spec.mjs", "public/sw.js", "src/lib/pwa/register-service-worker.ts", "src/components/service-worker-registration.tsx", "docs/cache-strategy.md", "tests/service-worker.spec.ts", "tests/offline.spec.ts"];
 const missing = required.filter(file => !existsSync(resolve(root, file)));
 const structureOnly = process.argv.includes("--structure");
 if (structureOnly) {

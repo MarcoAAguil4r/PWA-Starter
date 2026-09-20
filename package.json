@@ -3,14 +3,14 @@
   "version": "0.1.0",
   "private": true,
   "engines": {
-    "node": ">=20.19.0",
+    "node": ">=22.18.0",
     "npm": ">=10.0.0"
   },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node tests/starter.spec.mjs && node tests/manifest.spec.mjs",
+    "test": "node tests/starter.spec.mjs && node tests/manifest.spec.mjs && node tests/service-worker.spec.ts && node tests/offline.spec.ts",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
