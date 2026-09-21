@@ -128,7 +128,7 @@
 
 ### Marco Antonio Aguilar Castillo
 
-- **Commit SHA evaluado:** Pendiente del commit final de esta integración; no se inventa un SHA.
+- **Commit SHA evaluado:** `03f4d4bc731b4aee8febba81a3e4aa06c05c5651`.
 - **Contribución concreta:** Corregí el fallback de navegación en `public/sw.js` para esperar la coincidencia de `/` antes de decidir entre caché y respuesta 503. Integré los specs de Semana 3 en `package.json`, actualicé el requisito a Node 22.18 para ejecutar TypeScript nativamente, agregué sus artefactos al chequeo estructural de `scripts/verify.mjs` y al check público, y actualicé el workflow para ejecutar el mismo `npm test` con esa versión de Node.
 - **Decisión técnica que puedo explicar:** Mantener el fallback como respuesta HTML 503 cuando no exista ni la navegación solicitada ni `/` en caché evita devolver `undefined` ante una caída de red. Los specs TypeScript se ejecutan directamente con Node, sin agregar un runner o dependencia adicional, y se encadenan después de las pruebas de Semanas 1 y 2 para conservar su cobertura.
 - **Pruebas ejecutadas y resultado real:** `npm ci`, `npm test`, `npm run build`, `make verify` y `node scripts/verify.mjs --structure` terminaron correctamente con Node v22.22.0 y npm 10.9.4. Los dos specs de Semana 3 reportaron PASS; el check Bash se reserva para GitHub Actions porque este entorno Windows no tiene Bash.
@@ -141,7 +141,7 @@ Contribución concreta: Creé tests/service-worker.spec.ts y tests/offline.spec.
 Decisión técnica que puedo explicar: Modelé el contrato observable del worker actual, en vez de imponer otra estrategia: instalación/precache atómico, cache-first para iconos estáticos, network-first para navegaciones, limpieza de cachés pwa-* obsoletos y clients.claim(). Una versión nueva se simula exclusivamente en memoria para verificar que el ciclo install/activate invalida las cachés de la versión anterior.
 Pruebas ejecutadas y resultado real:
 node tests/service-worker.spec.ts: PASS — instalación, precache, runtime cache, actualización e invalidación.
-node tests/offline.spec.ts: FAIL intencional (Caso C) — detecta un defecto real en public/sw.js. Tras simular una respuesta HTTP 500 no cacheable y un fallo posterior de red, la navegación resolvió undefined en vez del fallback 503 esperado. Error: AssertionError: actual: undefined, expected: true.
+node tests/offline.spec.ts: PASS — fallback offline, recuperación de navegaciones y protección contra respuestas HTTP no cacheables.
 npm test: PASS — ejecuta las pruebas base, de manifest y los dos specs de Semana 3.
 npm run build: PASS — Next.js 14.2.35 compila sin errores, genera páginas estáticas correctamente.
 Qué cubren y qué no cubren: Cubren el comportamiento de caché y recuperación del worker con respuestas, fallos y versiones sintéticos y deterministas. No sustituyen una prueba E2E en un navegador real ni prueban el registro visual del worker. Tampoco afirman sincronización de formularios o datos de inspecciones, porque el worker no la implementa.
@@ -150,7 +150,7 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 
 ### Dulce Acevedo Miguel
 
-- **Commit SHA evaluado:** Pendiente del commit final de integración; no se inventa un SHA.
+- **Commit SHA evaluado:** `03f4d4bc731b4aee8febba81a3e4aa06c05c5651`.
 - **Contribución concreta:** Audité y actualicé `docs/cache-strategy.md`, `README.md`, `public-tests/README.md` y `tests/README.md` para describir el Service Worker, la cobertura offline, las pruebas y sus límites reales. Añadí esta evidencia sin modificar el worker, el registro, las pruebas, scripts ni workflows.
 - **Decisión documental que puedo explicar:** Documenté el fallback de navegación con respuesta 503 cuando no existe ni la URL solicitada ni `/` en caché. También distinguí recuperación de solicitudes de sincronización de datos, que el proyecto no implementa.
 - **Prueba o validación ejecutada y resultado real:** Con Node `v22.22.0` y npm `10.9.4`, `npm ci`, `npm test`, `npm run build` y `make verify` terminaron correctamente. Los specs de Semana 3 pasaron; el check Bash se ejecuta en CI porque este entorno Windows no tiene Bash.
