@@ -22,7 +22,7 @@ export function AppShell({ children, title, description, statusLabel }: AppShell
 
       <nav aria-label="Navegación principal" className="app-nav">
         <ul>
-          <li><a href="/">Inspecciones</a></li>
+          <li><a href="/inspecciones">Inspecciones</a></li>
           <li>
             <span aria-disabled="true" className="nav-disabled">
               Resumen (próximamente)

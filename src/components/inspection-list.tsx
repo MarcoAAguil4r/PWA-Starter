@@ -1,5 +1,6 @@
 "use client";
 
+import { LoadingState } from "./loading-state";
 import type { inspections as InspectionsType } from "../lib/data/inspections";
 
 type Inspection = (typeof InspectionsType)[number];
@@ -13,7 +14,7 @@ interface Props {
 
 export function InspectionList({ inspections, state = "exito", onRetry }: Props) {
   if (state === "cargando") {
-    return <p role="status">Cargando inspecciones…</p>;
+    return <LoadingState label="Cargando inspecciones" />;
   }
 
   if (state === "error") {
