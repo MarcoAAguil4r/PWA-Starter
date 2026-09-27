@@ -74,3 +74,18 @@ Inviten a los integrantes y al docente al mismo repositorio privado. Cada person
 - `tests/`: pruebas base, de manifest y los specs de comportamiento del worker de Semana 3.
 
 Registren aquí sus supuestos y limitaciones de ejecución. La aplicación implementa una cobertura de recursos y navegación limitada mediante Service Worker, pero no captura ni sincroniza inspecciones offline. No incluyan datos personales reales en el producto, archivos `.env` ni credenciales. La identificación de integrantes se conserva en el repositorio privado y Classroom.
+
+### Semana 4: listado SSR y detalle CSR
+
+`/inspecciones` es el listado SSR: se compone en el servidor con las tres inspecciones sintéticas. `/inspecciones/inspection-001`, `/inspecciones/inspection-002` y `/inspecciones/inspection-003` son detalles CSR; muestran carga antes de resolver el identificador en cliente. `/inspecciones/id-inexistente` comunica que no existe el registro y ofrece volver al listado.
+
+La suite completa incluye `tests/rendering.spec.ts`, que verifica el contrato de estas rutas, carga, contenido, inexistente y navegación sin requerir servicios externos:
+
+```bash
+npm test
+npm run build
+make verify
+bash "docs/semana 4/public-tests/check.sh"
+```
+
+La comparación de estrategias, evidencia y límites de las pruebas está en [docs/rendering-decision.md](docs/rendering-decision.md). El workflow `.github/workflows/week-04-w04-csr-ssr.yml` reproduce instalación limpia, build, artefactos y suite de pruebas con Node 22.18.0.

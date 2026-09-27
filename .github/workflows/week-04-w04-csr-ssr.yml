@@ -1,0 +1,49 @@
+# Feedback formativo de la Actividad 4: renderizado CSR/SSR.
+name: Academic Evaluation Feedback - Week 04
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.18.0
+      - name: Install dependencies
+        shell: bash
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: AC-01 - Clean install and build
+        shell: bash
+        run: npm run build
+      - name: AC-02 - Week 04 artifacts exist
+        shell: bash
+        run: |
+          test -e 'src/app/inspecciones/page.tsx'
+          test -e 'src/app/inspecciones/[id]/page.tsx'
+          test -e 'src/components/loading-state.tsx'
+          test -e 'docs/rendering-decision.md'
+          test -e 'tests/rendering.spec.ts'
+      - name: AC-03 - Test suite runs
+        shell: bash
+        run: npm test
+      - name: Upload evaluation artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: academic-evidence-w04-csr-ssr
+          if-no-files-found: ignore
+          path: |
+            reports/verification.json
+            coverage/
+            test-results/
