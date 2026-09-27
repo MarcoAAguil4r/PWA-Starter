@@ -40,7 +40,9 @@ export function InspectionList({ inspections, state = "exito", onRetry }: Props)
             <span className={`badge badge-${inspection.status}`}>{inspection.statusLabel}</span>
             <span className="muted">{inspection.date}</span>
           </div>
-          <h3>{inspection.location}</h3>
+          <h3>
+  	        <a href={`/inspecciones/${inspection.id}`}>{inspection.location}</a>
+	        </h3>
           <p>{inspection.summary}</p>
           <dl>
             <div>
