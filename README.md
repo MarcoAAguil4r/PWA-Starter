@@ -21,7 +21,7 @@ Abran `http://localhost:3000` y comprueben las tres inspecciones sintéticas. De
 npm run verify
 ```
 
-Ejecuta la comprobación de estructura configurada, `npm test` y el build; genera `reports/verification.json`. El reporte contiene resultados técnicos y documentos para revisión, no una calificación automática. `make verify` es equivalente. `bash public-tests/check.sh` es un check opcional de estructura de Semanas 1–2.
+Ejecuta la comprobación de estructura, `npm test`, el build de producción y la medición HTTP repetible de las rutas SSR/CSR; genera `reports/verification.json` y `reports/rendering-metrics.json`. El reporte contiene resultados técnicos y documentos para revisión, no una calificación automática. `make verify` es equivalente. Para repetir únicamente la medición después de un build, ejecuta `npm run measure:rendering`.
 
 El workflow de Semana 3 (`.github/workflows/week-03-w03-service-worker-offline.yml`) instala dependencias, compila, comprueba que existan los artefactos requeridos, ejecuta `npm test` y corre el check público. Su artefacto se llama `academic-evidence-w03-service-worker-offline`. El reporte local se excluye de Git: adjúntenlo en Classroom o descarguen el del SHA entregado desde Actions.
 
@@ -79,13 +79,12 @@ Registren aquí sus supuestos y limitaciones de ejecución. La aplicación imple
 
 `/inspecciones` es el listado SSR: se compone en el servidor con las tres inspecciones sintéticas. `/inspecciones/inspection-001`, `/inspecciones/inspection-002` y `/inspecciones/inspection-003` son detalles CSR; muestran carga antes de resolver el identificador en cliente. `/inspecciones/id-inexistente` comunica que no existe el registro y ofrece volver al listado.
 
-La suite completa incluye `tests/rendering.spec.ts`, que verifica el contrato de estas rutas, carga, contenido, inexistente y navegación sin requerir servicios externos:
+La suite completa incluye `tests/rendering.spec.ts`, que verifica el contrato de estas rutas, carga, error recuperable, contenido, inexistente y navegación sin requerir servicios externos. `make verify` también mide cinco respuestas HTTP por ruta después de una solicitud de calentamiento y genera los reportes:
 
 ```bash
-npm test
-npm run build
+npm ci
 make verify
 bash "docs/semana 4/public-tests/check.sh"
 ```
 
-La comparación de estrategias, evidencia y límites de las pruebas está en [docs/rendering-decision.md](docs/rendering-decision.md). El workflow `.github/workflows/week-04-w04-csr-ssr.yml` reproduce instalación limpia, build, artefactos y suite de pruebas con Node 22.18.0.
+La medición registra bytes del HTML inicial y mediana de respuesta HTTP local; no equivale a LCP/TTI ni al tiempo de hidratación. La comparación de estrategias, método, evidencia y límites está en [docs/rendering-decision.md](docs/rendering-decision.md). El workflow `.github/workflows/week-04-w04-csr-ssr.yml` ejecuta `npm ci`, `npm run verify` y publica ambos reportes con Node 22.18.0.

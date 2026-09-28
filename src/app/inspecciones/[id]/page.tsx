@@ -11,20 +11,26 @@ export default function InspectionDetailPage() {
   const params = useParams<{ id: string }>();
   const [state, setState] = useState<LoadState>("cargando");
   const [inspection, setInspection] = useState<Inspection | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
 
   useEffect(() => {
     setState("cargando");
     const timer = setTimeout(() => {
-      const found = inspections.find((item) => item.id === params.id);
-      if (found) {
-        setInspection(found);
-        setState("encontrada");
-      } else {
-        setState("no-encontrada");
+      try {
+        const found = inspections.find((item) => item.id === params.id);
+        if (found) {
+          setInspection(found);
+          setState("encontrada");
+        } else {
+          setState("no-encontrada");
+        }
+      } catch {
+        setInspection(null);
+        setState("error");
       }
     }, 300);
     return () => clearTimeout(timer);
-  }, [params.id]);
+  }, [params.id, retryCount]);
 
   if (state === "cargando") {
     return <LoadingState label="Cargando inspección..." />;
@@ -44,6 +50,8 @@ export default function InspectionDetailPage() {
     return (
       <section role="alert" className="content-section">
         <p>No se pudo cargar la inspección.</p>
+        <button type="button" onClick={() => setRetryCount((count) => count + 1)}>Reintentar</button>
+        <a href="/inspecciones">Volver al listado</a>
       </section>
     );
   }

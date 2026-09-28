@@ -23,20 +23,23 @@ jobs:
       - name: Install dependencies
         shell: bash
         run: npm ci --ignore-scripts --no-audit --no-fund
-      - name: AC-01 - Clean install and build
+      - name: AC-01 and AC-03 - Verify, test, build, and measure
         shell: bash
-        run: npm run build
+        run: npm run verify
       - name: AC-02 - Week 04 artifacts exist
         shell: bash
         run: |
           test -e 'src/app/inspecciones/page.tsx'
           test -e 'src/app/inspecciones/[id]/page.tsx'
+          test -e 'src/app/inspecciones/error.tsx'
+          test -e 'src/app/inspecciones/[id]/error.tsx'
           test -e 'src/components/loading-state.tsx'
+          test -e 'scripts/measure-rendering.mjs'
           test -e 'docs/rendering-decision.md'
           test -e 'tests/rendering.spec.ts'
-      - name: AC-03 - Test suite runs
+      - name: Public contract check
         shell: bash
-        run: npm test
+        run: bash "docs/semana 4/public-tests/check.sh"
       - name: Upload evaluation artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -45,5 +48,4 @@ jobs:
           if-no-files-found: ignore
           path: |
             reports/verification.json
-            coverage/
-            test-results/
+            reports/rendering-metrics.json

@@ -6,5 +6,6 @@ coverage/
 .env*
 !.env.example
 reports/verification.json
+reports/rendering-metrics.json
 
 tsconfig.tsbuildinfo

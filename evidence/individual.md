@@ -159,3 +159,26 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Uso declarado de IA:** Utilicé Codex como apoyo para inspeccionar los archivos, contrastar el comportamiento y estructurar la documentación. Revisé manualmente cada afirmación contra el código y la salida de los comandos antes de incorporarla.
 
 > No necesitan inventar un error ni escribir pruebas nuevas. «Ejecuté npm test» es insuficiente como explicación: indiquen qué observa la prueba y qué comportamiento queda fuera.
+
+## Semana 4
+
+### Marco Antonio Aguilar Castillo (GitHub: MarcoAAguil4r)
+
+- **Commit asociado a mi contribución:** [`580bdbb0f856e3aa37151d3960cd796e600ae52a`](https://github.com/MarcoAAguil4r/PWA-Starter/commit/580bdbb0f856e3aa37151d3960cd796e600ae52a). El commit implementa `/inspecciones` como Server Component dinámico, reutiliza los datos sintéticos y agrega el estado de carga de la ruta y `LoadingState`.
+- **Decisión que puedo explicar:** El listado de solo lectura se renderiza por solicitud en servidor para entregar su contenido en el HTML inicial. La ruta de detalle resuelve su identificador y estado en un Client Component.
+- **Validación de esta revisión asistida:** `npm ci --ignore-scripts --no-audit --no-fund` y `make verify` terminaron correctamente en Node `v22.22.0`. Pasaron la suite, el build de producción y cinco solicitudes medidas por ruta después de una solicitud de calentamiento. Los reportes son `reports/verification.json` y `reports/rendering-metrics.json`; la última medición se registra en este último. El escaneo equivalente del check público pasó con PowerShell; el script Bash no se ejecutó localmente porque este entorno no dispone de Bash. No se ha confirmado una corrida remota de GitHub Actions.
+- **Alcance y limitación:** La medición HTTP local informa mediana de respuesta y bytes del HTML inicial; no equivale a Core Web Vitals ni mide hidratación en navegador. Las pruebas son de contrato y no sustituyen E2E o una revisión con lector de pantalla.
+- **Cambio que puedo defender o modificar:** `src/app/inspecciones/page.tsx`, `src/app/inspecciones/loading.tsx`, `src/components/loading-state.tsx` y la decisión SSR del listado.
+- **Uso de IA:** GitHub Copilot apoyó la revisión de requisitos, la instrumentación de medición, las pruebas y la redacción de esta evidencia. Debo revisar el resultado y poder explicar personalmente las decisiones antes de entregar.
+
+## Semana 4
+
+### Marco Antonio Aguilar Castillo (GitHub: MarcoAAguil4r)
+
+- **Commit asociado:** [`580bdbb0f856e3aa37151d3960cd796e600ae52a`](https://github.com/MarcoAAguil4r/PWA-Starter/commit/580bdbb0f856e3aa37151d3960cd796e600ae52a).
+- **Contribución comprobable:** Implementé `/inspecciones` como Server Component dinámico, reutilizando las inspecciones sintéticas. También agregué el estado de carga de la ruta y el componente compartido `LoadingState`, junto con los artefactos iniciales de la actividad.
+- **Decisión técnica que puedo explicar:** Mantener el listado en servidor permite entregar las inspecciones en el HTML inicial sin convertir esa ruta en Client Component. `dynamic = "force-dynamic"` hace explícito que el listado se renderiza por solicitud; `loading.tsx` presenta el estado de espera de la ruta.
+- **Validación del repositorio actual:** `make verify` ejecuta la suite, el build de producción y la medición repetible de cinco respuestas HTTP por ruta. El reporte guarda la mediana de duración y los bytes del HTML inicial. El check público Bash requiere Bash; la corrida remota de GitHub Actions debe confirmarse antes de entregar.
+- **Limitación identificada:** La duración HTTP local no representa Core Web Vitals ni el tiempo de hidratación. La fuente del detalle es sintética, por lo que su camino de error no se activa en el flujo normal; las pruebas de contrato no sustituyen una prueba E2E de hidratación.
+- **Cambio que puedo explicar o modificar:** La ruta `src/app/inspecciones/page.tsx`, el estado de carga `src/app/inspecciones/loading.tsx` y `src/components/loading-state.tsx`, incluidos el uso de SSR y los datos sintéticos.
+- **Uso de IA:** GitHub Copilot se utilizó en esta revisión para contrastar los requisitos con el código e historial y redactar esta evidencia. Antes de entregar, debo revisar el texto y poder explicar personalmente la decisión y sus límites.

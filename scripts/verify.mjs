@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import { spawnSync } from "node:child_process";
 
 const root = resolve(import.meta.dirname, "..");
-const required = ["package.json", "package-lock.json", "README.md", "src/app/layout.tsx", "src/app/page.tsx", "src/app/globals.css", "src/lib/data/inspections.ts", "docs/requirements.md", "docs/decision-record.md", "tests/starter.spec.mjs", "evidence/individual.md", "src/components/app-shell.tsx", "src/app/manifest.ts", "public/icons/icon-192x192.png", "public/icons/icon-512x512.png", "tests/manifest.spec.mjs", "public/sw.js", "src/lib/pwa/register-service-worker.ts", "src/components/service-worker-registration.tsx", "docs/cache-strategy.md", "tests/service-worker.spec.ts", "tests/offline.spec.ts"];
+const required = ["package.json", "package-lock.json", "README.md", "src/app/layout.tsx", "src/app/page.tsx", "src/app/globals.css", "src/lib/data/inspections.ts", "docs/requirements.md", "docs/decision-record.md", "tests/starter.spec.mjs", "evidence/individual.md", "src/components/app-shell.tsx", "src/app/manifest.ts", "public/icons/icon-192x192.png", "public/icons/icon-512x512.png", "tests/manifest.spec.mjs", "public/sw.js", "src/lib/pwa/register-service-worker.ts", "src/components/service-worker-registration.tsx", "docs/cache-strategy.md", "tests/service-worker.spec.ts", "tests/offline.spec.ts", "src/app/inspecciones/page.tsx", "src/app/inspecciones/[id]/page.tsx", "src/app/inspecciones/error.tsx", "src/app/inspecciones/[id]/error.tsx", "src/components/loading-state.tsx", "docs/rendering-decision.md", "tests/rendering.spec.ts", "scripts/measure-rendering.mjs", "docs/semana 4/evidence/individual.md"];
 const missing = required.filter(file => !existsSync(resolve(root, file)));
 const structureOnly = process.argv.includes("--structure");
 if (structureOnly) {
@@ -19,11 +19,20 @@ for (const [id, args] of [["test", ["test"]], ["build", ["run", "build"]]]) {
   if (run.stderr) process.stderr.write(run.stderr);
   checks.push({ id, status: run.status === 0 && !run.error ? "pass" : "fail", exitCode: run.status, error: run.error?.message ?? null });
 }
+if (checks.find(check => check.id === "build")?.status === "pass") {
+  console.log("\nMidiendo respuestas SSR y CSR...");
+  const run = spawnSync(npm, ["run", "measure:rendering"], { cwd: root, encoding: "utf8", shell: process.platform === "win32", maxBuffer: 20 * 1024 * 1024 });
+  if (run.stdout) process.stdout.write(run.stdout);
+  if (run.stderr) process.stderr.write(run.stderr);
+  checks.push({ id: "rendering-metric", status: run.status === 0 && !run.error ? "pass" : "fail", exitCode: run.status, error: run.error?.message ?? null });
+} else {
+  checks.push({ id: "rendering-metric", status: "fail", exitCode: null, error: "Skipped because the production build did not pass." });
+}
 const git = args => {
   const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
   return r.status === 0 ? r.stdout.trim() : null;
 };
-const documents = ["docs/requirements.md", "docs/decision-record.md", "evidence/individual.md", "README.md"].map(file => ({ file, content: existsSync(resolve(root, file)) ? readFileSync(resolve(root, file), "utf8") : null }));
+const documents = ["docs/requirements.md", "docs/decision-record.md", "docs/rendering-decision.md", "evidence/individual.md", "docs/semana 4/evidence/individual.md", "README.md"].map(file => ({ file, content: existsSync(resolve(root, file)) ? readFileSync(resolve(root, file), "utf8") : null }));
 const gitStatus = git(["status", "--porcelain"]);
 const result = {
   schemaVersion: 2,
@@ -33,8 +42,9 @@ const result = {
   runtime: { node: process.version },
   status: checks.every(c => c.status === "pass") ? "pass" : "fail",
   checks,
+  renderingMetrics: checks.find(check => check.id === "rendering-metric")?.status === "pass" ? JSON.parse(readFileSync(resolve(root, "reports/rendering-metrics.json"), "utf8")) : null,
   academicReview: { status: "pending", message: "Sin calificación automática. Revisar requisitos, decisión y evidencia por integrante con la rúbrica; existencia no implica calidad.", documents },
-  limits: ["La instalación se verifica mediante npm ci por separado.", "No certifica ausencia de secretos.", "Las pruebas proporcionadas no cubren toda la aplicación."]
+  limits: ["La instalación se verifica mediante npm ci por separado.", "La duración HTTP local no equivale a una medición de pintura del navegador o Core Web Vitals.", "Las pruebas de contrato no sustituyen una prueba E2E de hidratación y accesibilidad con tecnologías de asistencia."]
 };
 mkdirSync(resolve(root, "reports"), { recursive: true });
 writeFileSync(resolve(root, "reports/verification.json"), JSON.stringify(result, null, 2) + "\n");
