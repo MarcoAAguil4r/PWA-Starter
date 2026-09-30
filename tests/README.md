@@ -16,3 +16,13 @@ node tests/offline.spec.ts         # PASS
 
 Node puede emitir una advertencia de tipo de módulo para ambos archivos, pero los ejecuta. `npm test`, `npm run verify` y el workflow de Semana 3 cubren estos dos specs. No hay prueba E2E de navegador para registro, espera/actualización del worker o la UI offline.
 
+## Semana 5
+
+`sync.spec.ts` valida el esquema de IndexedDB, los datos sintéticos y las decisiones de conflicto sin servicios externos. Mientras se completa la integración de la suite, se ejecuta directamente:
+
+```bash
+node tests/sync.spec.ts
+```
+
+La prueba no sustituye una validación en navegador ni prueba una API remota o la cola completa.
+

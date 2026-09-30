@@ -182,3 +182,14 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Limitación identificada:** La duración HTTP local no representa Core Web Vitals ni el tiempo de hidratación. La fuente del detalle es sintética, por lo que su camino de error no se activa en el flujo normal; las pruebas de contrato no sustituyen una prueba E2E de hidratación.
 - **Cambio que puedo explicar o modificar:** La ruta `src/app/inspecciones/page.tsx`, el estado de carga `src/app/inspecciones/loading.tsx` y `src/components/loading-state.tsx`, incluidos el uso de SSR y los datos sintéticos.
 - **Uso de IA:** GitHub Copilot se utilizó en esta revisión para contrastar los requisitos con el código e historial y redactar esta evidencia. Antes de entregar, debo revisar el texto y poder explicar personalmente la decisión y sus límites.
+
+## Semana 5
+
+### Integrante 1 (identificador académico: 3523110229)
+
+- **Commit asociado:** pendiente del push de esta integración.
+- **Contribución concreta:** Definí el esquema versionado de IndexedDB para inspecciones, cola y conflictos en `src/lib/storage/schema.ts`; agregué validadores de datos; implementé la política determinista en `src/lib/sync/conflict-policy.ts`; documenté los contratos y límites en `docs/sync-policy.md`; y agregué `tests/sync.spec.ts`.
+- **Decisión técnica que puedo explicar:** Si una revisión remota avanzó desde la revisión base local, la versión del servidor queda como canónica, pero ambas copias se conservan en el registro de conflicto. Una respuesta remota con revisión anterior se ignora; los timestamps no determinan qué versión gana.
+- **Pruebas ejecutadas y resultado real:** `node tests/sync.spec.ts` pasó para esquema, validación y política de conflictos. `npm test` y `npm run build` también terminaron correctamente. Node emitió advertencias de modo de módulo en los specs TypeScript.
+- **Alcance y limitación:** La prueba usa una base IndexedDB simulada; no valida todavía persistencia real en navegador, una API remota, la cola completa ni la captura desde la interfaz. `tests/sync.spec.ts` aún no está integrado en `npm test`; queda para el cierre de integración.
+- **Uso de IA:** GitHub Copilot apoyó la definición y edición del esquema, la política, las pruebas y la documentación. Debo revisar los cambios y poder explicar y modificar la política antes de entregar.
