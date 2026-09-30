@@ -1,13 +1,14 @@
 "use client";
 
 import { LoadingState } from "./loading-state";
-import type { inspections as InspectionsType } from "../lib/data/inspections";
+import type { Inspection } from "../lib/data/inspections";
+import type { InspectionSyncStatus } from "../lib/storage/schema";
 
-type Inspection = (typeof InspectionsType)[number];
+type ListInspection = Inspection & { syncStatus?: InspectionSyncStatus };
 type ListState = "cargando" | "error" | "vacio" | "exito";
 
 interface Props {
-  inspections: Inspection[];
+  inspections: ListInspection[];
   state?: ListState;
   onRetry?: () => void;
 }
@@ -38,12 +39,13 @@ export function InspectionList({ inspections, state = "exito", onRetry }: Props)
         <article className="inspection-card" key={inspection.id}>
           <div className="card-topline">
             <span className={`badge badge-${inspection.status}`}>{inspection.statusLabel}</span>
-            <span className="muted">{inspection.date}</span>
+            <span className={`sync-status sync-${inspection.syncStatus ?? "synced"}`}>{inspection.syncStatus ?? "synced"}</span>
           </div>
           <h3>
   	        <a href={`/inspecciones/${inspection.id}`}>{inspection.location}</a>
 	        </h3>
           <p>{inspection.summary}</p>
+          <p className="muted">{inspection.date}</p>
           <dl>
             <div>
               <dt>Responsable</dt>

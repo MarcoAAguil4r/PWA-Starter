@@ -1,0 +1,36 @@
+# Feedback formativo de la Actividad 5: persistencia y sincronización offline.
+name: Academic Evaluation Feedback - Week 05 Sync Data
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evaluate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.18.0
+          cache: npm
+      - name: Instalación reproducible
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Suite, build y reporte de verificación
+        run: npm run verify
+      - name: Contrato público de Semana 5
+        run: bash "docs/semana 5/public-tests/check.sh"
+      - name: Guardar evidencia técnica
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: academic-evidence-w05-sync-data
+          if-no-files-found: warn
+          path: |
+            reports/verification.json
+            reports/rendering-metrics.json

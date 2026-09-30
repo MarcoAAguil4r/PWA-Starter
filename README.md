@@ -88,3 +88,25 @@ bash "docs/semana 4/public-tests/check.sh"
 ```
 
 La medición registra bytes del HTML inicial y mediana de respuesta HTTP local; no equivale a LCP/TTI ni al tiempo de hidratación. La comparación de estrategias, método, evidencia y límites está en [docs/rendering-decision.md](docs/rendering-decision.md). El workflow `.github/workflows/week-04-w04-csr-ssr.yml` ejecuta `npm ci`, `npm run verify` y publica ambos reportes con Node 22.18.0.
+
+### Semana 5: captura offline y sincronización idempotente
+
+La pantalla `/inspecciones` conserva las capturas sintéticas en IndexedDB (`pwa-inspections`) y las recupera al volver a abrir la aplicación. El formulario valida ubicación, responsable, resumen y un número entero no negativo de hallazgos antes de guardar. Una captura siempre queda visible con uno de estos estados: `pending` (guardada localmente y pendiente), `synced` (confirmada) o `conflict` (se conservaron ambas versiones). Los errores recuperables de almacenamiento o transporte se anuncian con `role="alert"`; no se descarta silenciosamente una operación.
+
+Al recuperar conectividad, el evento `online` procesa la cola; también puede usarse **Sincronizar pendientes**. Un cerrojo por pestaña evita ejecuciones simultáneas. Cada operación conserva su clave idempotente y se reintenta hasta cinco veces sólo ante errores recuperables; un error no recuperable se abandona de manera explícita. Las respuestas remotas obsoletas no modifican una edición local reciente. Si hay conflicto, se persisten y muestran las copias local y remota. Consulte la [política de sincronización](docs/sync-policy.md).
+
+No hay API remota en este proyecto. `createSyntheticTransport()` es un adaptador determinista para demostrar y probar el flujo; no es un backend de producción ni comparte datos entre navegadores o dispositivos.
+
+Para verificar Semana 5 en un entorno con Node 22.18+ y Bash:
+
+```bash
+npm ci
+npm test
+npm run build
+npm run verify
+# equivalente:
+make verify
+bash "docs/semana 5/public-tests/check.sh"
+```
+
+`npm test` incluye las regresiones anteriores y `tests/sync.spec.ts`: validación, persistencia representada por el store, captura pendiente, reintentos, límite, errores no recuperables, deduplicación, conflictos y respuestas fuera de orden. `.github/workflows/week-05-w05-sync-data.yml` ejecuta la misma verificación y publica los reportes generados.

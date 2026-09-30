@@ -1,3 +1,4 @@
+import { InspectionWorkspace } from "../../components/inspection-workspace";
 import { InspectionList } from "../../components/inspection-list";
 import { inspections } from "../../lib/data/inspections";
 
@@ -13,8 +14,8 @@ export default function InspectionsPage() {
         </div>
         <span className="count">{inspections.length} registros</span>
       </div>
-
       <InspectionList inspections={inspections} />
+      <InspectionWorkspace />
     </section>
   );
 }

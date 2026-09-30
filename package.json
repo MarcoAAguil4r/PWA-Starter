@@ -11,7 +11,7 @@
     "build": "next build",
     "start": "next start",
     "measure:rendering": "node scripts/measure-rendering.mjs",
-    "test": "node tests/starter.spec.mjs && node tests/manifest.spec.mjs && node tests/service-worker.spec.ts && node tests/offline.spec.ts && node tests/rendering.spec.ts",
+    "test": "node tests/starter.spec.mjs && node tests/manifest.spec.mjs && node tests/service-worker.spec.ts && node tests/offline.spec.ts && node tests/rendering.spec.ts && node tests/sync.spec.ts",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {

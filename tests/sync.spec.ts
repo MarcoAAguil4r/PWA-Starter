@@ -9,7 +9,7 @@ import {
 } from "../src/lib/storage/schema.ts";
 import { resolveInspectionConflict } from "../src/lib/sync/conflict-policy.ts";
 import type { Inspection } from "../src/lib/data/inspections.ts";
-import type { StoredInspection } from "../src/lib/storage/schema.ts";
+import type { InspectionConflict, RemoteInspection, StoredInspection, SyncOperation } from "../src/lib/storage/schema.ts";
 
 const timestamp = "2026-09-29T12:00:00.000Z";
 const inspection: Inspection = {
@@ -140,6 +140,7 @@ function fakeQueueStore(
 ) {
   const inspections = new Map(seedInspections.map((item) => [item.id, item]));
   const operations = new Map(seedOperations.map((item) => [item.idempotencyKey, item]));
+  const conflicts = new Map<string, InspectionConflict>();
   const store = {
     async listOperations() {
       return [...operations.values()];
@@ -155,9 +156,12 @@ function fakeQueueStore(
     },
     async saveInspection(item: StoredInspection) {
       inspections.set(item.id, item);
+    },
+    async saveConflict(conflict: InspectionConflict) {
+      conflicts.set(conflict.conflictId, conflict);
     }
   };
-  return { store, inspections, operations };
+  return { store, inspections, operations, conflicts };
 }
 
 // Adaptador sintético para pruebas: NO es un backend real, solo reproduce
@@ -231,7 +235,7 @@ function pendingOperation(overrides: Partial<SyncOperation> = {}): SyncOperation
 // conflicto y se saca la operación de la cola (queda marcada, no perdida).
 {
   const remoteChanged = { ...inspection, summary: "Cambio remoto sintético." };
-  const { store, inspections, operations } = fakeQueueStore(
+  const { store, inspections, operations, conflicts } = fakeQueueStore(
     [storedInspection({ inspection: { ...inspection, summary: "Cambio local sintético." } })],
     [pendingOperation()]
   );
@@ -240,6 +244,7 @@ function pendingOperation(overrides: Partial<SyncOperation> = {}): SyncOperation
   assert.equal(outcomes[0].kind, "conflict");
   assert.equal(operations.size, 0);
   assert.equal(inspections.get(inspection.id)?.syncStatus, "conflict");
+  assert.equal(conflicts.size, 1, "ambas versiones deben persistirse en conflicts");
 }
 
 // Respuesta fuera de orden: hay una edición local pendiente y llega una

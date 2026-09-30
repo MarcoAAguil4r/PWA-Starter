@@ -31,7 +31,9 @@ No se fusionan campos automáticamente ni se comparan relojes. Esta política ev
 
 ## Límites de esta integración
 
-Esta primera integración define y prueba el esquema, los validadores y la decisión pura de conflictos. No implementa todavía la cola, una API remota, captura en interfaz, reintentos ni sincronización al recuperar conexión. El siguiente integrante debe consumir estos tipos y persistir la operación/conflicto de forma transaccional. La prueba `tests/sync.spec.ts` es determinista y no requiere IndexedDB real ni servicios externos.
+La aplicación usa `IndexedDbInspectionStore` en el navegador: las capturas y la cola sobreviven a la recarga, y el evento `online` vuelve a procesar la cola. Un cerrojo en memoria evita dos procesos de sincronización simultáneos en la misma pestaña. Los errores de IndexedDB o transporte se muestran como recuperables y la operación no se elimina antes de una confirmación, conflicto o abandono explícito.
+
+El transporte es `createSyntheticTransport()`: un adaptador determinista sólo para la demo y pruebas locales; **no es un backend ni sincroniza entre dispositivos**. El límite de reintentos es 5 y los errores no recuperables se abandonan explícitamente. La resolución de conflicto persiste el `InspectionConflict` con ambos snapshots antes de marcar el registro local como `conflict`. No hay aún UI para resolver ese conflicto ni reintento con espera exponencial entre intentos.
 
 
 ## Cola de sincronización (Integrante 2)
@@ -46,4 +48,4 @@ Esta primera integración define y prueba el esquema, los validadores y la decis
 
 **Protección ante respuestas fuera de orden:** las operaciones se procesan en orden de `createdAt`. Cuando `resolveInspectionConflict` clasifica una respuesta como `ignore-stale-response` (revisión remota anterior a la ya confirmada), la cola no toca el estado local ni retira la operación — se ignora la respuesta obsoleta y la operación sigue pendiente para la siguiente ronda.
 
-**Límite de esta integración:** no existe todavía un transporte remoto real ni la conexión con la interfaz de captura — eso corresponde al Integrante 3. Las pruebas usan un adaptador sintético (`createSyntheticTransport` en `tests/sync.spec.ts`) que reproduce respuestas programadas; no debe confundirse con un backend real.
+**Integración de interfaz:** `InspectionWorkspace` abre IndexedDB, siembra sólo los tres ejemplos sintéticos iniciales cuando la base está vacía y desde entonces representa los registros persistidos. El formulario valida los datos antes de crear una operación con clave idempotente estable. `tests/sync.spec.ts` usa un adaptador programable y el adaptador de la interfaz es también sintético; ninguno debe confundirse con un backend real.

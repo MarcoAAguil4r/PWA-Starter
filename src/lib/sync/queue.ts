@@ -1,4 +1,4 @@
-import type { RemoteInspection, StoredInspection, SyncOperation } from "../storage/schema";
+import type { InspectionConflict, RemoteInspection, StoredInspection, SyncOperation } from "../storage/schema";
 import type { ConflictDecision } from "./conflict-policy";
 
 export interface SyncQueueStore {
@@ -7,6 +7,7 @@ export interface SyncQueueStore {
   deleteOperation(idempotencyKey: string): Promise<void>;
   getInspection(inspectionId: string): Promise<StoredInspection | null>;
   saveInspection(inspection: StoredInspection): Promise<void>;
+  saveConflict(conflict: InspectionConflict): Promise<void>;
 }
 
 export type SyncTransportResult =
@@ -114,6 +115,7 @@ export async function processPendingOperations(
       continue;
     }
 
+    await store.saveConflict(decision.conflict);
     await store.saveInspection({ ...local, syncStatus: "conflict" });
     await store.deleteOperation(operation.idempotencyKey);
     outcomes.push({ idempotencyKey: operation.idempotencyKey, kind: "conflict" });

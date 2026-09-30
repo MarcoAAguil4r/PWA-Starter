@@ -66,3 +66,15 @@ dd { font-size: .82rem; font-weight: 700; margin: 0; text-align: right; }
 .state-error { background: var(--warning-soft); border-radius: 14px; color: var(--warning); padding: 20px; }
 .state-error button { background: var(--warning); border: none; border-radius: 8px; color: white; cursor: pointer; margin-top: 10px; padding: 8px 14px; }
 .state-empty { color: var(--muted); padding: 20px 0; }
+.capture-form { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; display: grid; gap: 12px; margin-bottom: 18px; padding: 22px; }
+.capture-form label { display: grid; font-size: .9rem; font-weight: 700; gap: 5px; }
+.capture-form input, .capture-form textarea { border: 1px solid var(--line); border-radius: 8px; font: inherit; padding: 9px; }
+.capture-form textarea { min-height: 70px; resize: vertical; }
+.capture-form button { background: var(--accent); border: 0; border-radius: 8px; color: white; cursor: pointer; font: inherit; font-weight: 700; padding: 10px 14px; width: fit-content; }
+.sync-status { border-radius: 999px; font-size: .75rem; font-weight: 700; padding: 5px 9px; }
+.sync-pending { background: var(--warning-soft); color: var(--warning); }
+.sync-synced { background: var(--success-soft); color: var(--success); }
+.sync-conflict { background: #fee7ee; color: #9e174d; }
+.sync-message { color: var(--muted); }
+.conflict-list { margin-top: 24px; }
+.conflict-list article { background: #fff7f9; border: 1px solid #fecdd3; border-radius: 10px; margin: 10px 0; padding: 14px; }
