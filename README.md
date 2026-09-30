@@ -69,7 +69,7 @@ Inviten a los integrantes y al docente al mismo repositorio privado. Cada person
 
 - `src/app/`: pantalla Next.js.
 - `src/lib/data/`: inspecciones sintéticas.
-- `docs/`: requisitos y decisión del equipo.
+- [Documentación del proyecto y actividades](docs/README.md).
 - `evidence/`: evidencia propia de cada integrante.
 - `tests/`: pruebas base, de manifest y los specs de comportamiento del worker de Semana 3.
 
