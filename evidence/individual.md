@@ -186,7 +186,7 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 ## Semana 5
 
 ### Marco Antonio Aguilar (3523110229)
-- **Commit asociado:** `f42a3610a81c42b7b25a9e0c7f4d95040a03e627`.
+- **Commit asociado:** `f42a3610a9ee0a01d30e537a312c43dea4b428fa`.
 - **Contribución concreta:** Definí el esquema versionado de IndexedDB, validadores y política de conflictos; después integré la escritura atómica de inspección/cola, un endpoint HTTP sintético idempotente, reintentos con backoff, el formulario de captura y pruebas de IndexedDB realista con `fake-indexeddb`. Actualicé la documentación, los checks públicos y la evidencia.
 - **Decisión técnica que puedo explicar:** Una captura y su operación se confirman en la misma transacción IndexedDB. El endpoint compara `baseServerRevision`, aplica claves idempotentes y conserva la versión local y remota en conflictos. Una revisión obsoleta no puede hacer retroceder la revisión local.
 - **Pruebas ejecutadas y resultado real:** `npm ci --ignore-scripts --no-audit --no-fund` terminó correctamente. `node tests/sync.spec.ts` pasó los casos de rollback/reapertura, validación, servidor sintético, deduplicación, reintentos y conflictos. `make verify` terminó con `Verificación técnica: pass`: suite, build, escaneo de secretos, check público y medición SSR/CSR pasaron. En navegador, la captura offline quedó `pending` y pasó automáticamente a `synced` al reconectar, sin alerta falsa. Node emitió advertencias `MODULE_TYPELESS_PACKAGE_JSON` en specs TypeScript, sin afectar los resultados.
