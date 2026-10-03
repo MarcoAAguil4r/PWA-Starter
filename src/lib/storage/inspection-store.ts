@@ -10,7 +10,7 @@ import {
   type InspectionConflict,
   type StoredInspection,
   type SyncOperation
-} from "./schema";
+} from "./schema.ts";
 import type { SyncQueueStore } from "../sync/queue";
 
 function requestResult<T>(request: IDBRequest<T>): Promise<T> {
@@ -39,7 +39,11 @@ export function openInspectionDatabase(): Promise<IDBDatabase> {
 
 /** Browser-backed store. It deliberately contains no remote transport logic. */
 export class IndexedDbInspectionStore implements SyncQueueStore {
-  constructor(private readonly database: IDBDatabase) {}
+  private readonly database: IDBDatabase;
+
+  constructor(database: IDBDatabase) {
+    this.database = database;
+  }
 
   async listInspections(): Promise<StoredInspection[]> {
     const transaction = this.database.transaction(INSPECTION_STORES.inspections, "readonly");
@@ -72,6 +76,28 @@ export class IndexedDbInspectionStore implements SyncQueueStore {
   async saveInspection(inspection: StoredInspection): Promise<void> { await this.put(INSPECTION_STORES.inspections, inspection); }
   async saveOperation(operation: SyncOperation): Promise<void> { await this.put(INSPECTION_STORES.syncQueue, operation); }
   async saveConflict(conflict: InspectionConflict): Promise<void> { await this.put(INSPECTION_STORES.conflicts, conflict); }
+
+  close(): void {
+    this.database.close();
+  }
+
+  async saveCapture(inspection: StoredInspection, operation: SyncOperation): Promise<void> {
+    if (
+      inspection.id !== operation.inspectionId ||
+      inspection.idempotencyKey !== operation.idempotencyKey ||
+      inspection.inspection.id !== operation.payload.id
+    ) {
+      throw new Error("capture-operation-mismatch");
+    }
+
+    const transaction = this.database.transaction(
+      [INSPECTION_STORES.inspections, INSPECTION_STORES.syncQueue],
+      "readwrite"
+    );
+    transaction.objectStore(INSPECTION_STORES.inspections).add(inspection);
+    transaction.objectStore(INSPECTION_STORES.syncQueue).add(operation);
+    await transactionDone(transaction);
+  }
 
   async deleteOperation(idempotencyKey: string): Promise<void> {
     const transaction = this.database.transaction(INSPECTION_STORES.syncQueue, "readwrite");

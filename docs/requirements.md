@@ -13,7 +13,7 @@ Queda fuera de este producto:
 Gestión de compras, repuestos o proveedores de mantenimiento.
 Integración con sistemas institucionales de activos o directorios (Active Directory/LDAP).
 Autenticación real de usuarios y control de accesos por rol (se documenta como requisito futuro; no se implementa esta semana).
-Funcionalidad offline y sincronización real (manifest, service worker, cola de sincronización): se describe como capacidad futura en la sección de escenarios y requisitos, pero no se construye en esta entrega.
+Sincronización institucional persistente, compartida entre servidores/dispositivos, autenticación y sincronización en segundo plano siguen fuera del alcance actual. La Semana 5 implementa captura local en IndexedDB y un endpoint HTTP sintético en memoria para demostrar la cola, los reintentos y la política de conflictos; no es almacenamiento de producción.
 Notificaciones push y reportes automatizados hacia terceros.
 
 ## 2. Usuarios y escenarios
@@ -34,7 +34,7 @@ Escenario 2 — con conectividad intermitente
 
 Situación inicial: un técnico de mantenimiento realiza una ronda de inspección en el edificio B de industriales en laboratorios químicos, una zona sin cobertura Wi-Fi ni señal celular estable.
 Acción: durante la ronda detecta una falla en un equipo (por ejemplo, un extractor de gases) e intenta registrar el hallazgo en el formulario de inspección.
-Resultado esperado (capacidad futura, no implementada esta semana): el registro del hallazgo se guarda localmente en el dispositivo del técnico y queda marcado como "pendiente de sincronización"; al recuperar conexión, se sincroniza automáticamente con el servidor sin que el técnico tenga que volver a capturarlo ni pierda la información levantada en campo.
+Resultado implementado en Semana 5: el registro sintético se guarda localmente en IndexedDB y queda marcado como `pending`; al recuperar conexión, se envía por HTTP al endpoint sintético y cambia a `synced` o `conflict`. La integración demuestra el flujo, pero el endpoint conserva estado solo mientras vive el proceso del servidor.
 
 ## 3. Requisitos funcionales
 
@@ -48,24 +48,24 @@ Describan acciones del producto vinculadas a sus escenarios. Cada requisito llev
 | RF-02 | Mostrar, por cada inspección, responsable, fecha, número de hallazgos y estado | En cada tarjeta del listado aparecen visibles los cuatro datos (ej. Técnico B, 2026-08-27, 2 hallazgos, "Requiere atención") | Semana 1 |
 | RF-03 | Distinguir visualmente el estado de una inspección ("Sin incidencias" vs "Requiere atención") | La etiqueta de estado usa color y texto distintos según el caso, visible sin abrir el detalle | Semana 1 |
 | RF-04 | Indicar un contador total de inspecciones registradas | La pantalla muestra el número total de registros (ej. "3 registros") junto al listado | Semana 1 |
-| RF-05 | Registrar un nuevo hallazgo durante una ronda de inspección mediante un formulario | Al llenar y enviar el formulario con datos válidos, aparece un nuevo registro en el listado con esos mismos valores | Futuro |
-| RF-06 | Guardar localmente un hallazgo capturado sin conexión y marcarlo como "pendiente de sincronización" | En modo sin conexión, al enviar el formulario el registro aparece en el dispositivo con la etiqueta "pendiente de sincronización", vinculado al Escenario 2 | Futuro |
-| RF-07 | Sincronizar automáticamente con el servidor los registros pendientes al recuperar conexión | Al restablecer la conexión, los registros marcados como pendientes cambian a "sincronizado" sin que el técnico los vuelva a capturar, sin duplicados | Futuro |
+| RF-05 | Registrar una inspección sintética mediante el formulario | Con datos válidos, la inspección aparece con los mismos valores y el formulario se limpia solo después de persistirla | Semana 5 |
+| RF-06 | Guardar localmente una captura sin conexión | La inspección y su operación quedan en una transacción IndexedDB y se muestran como `pending`; sobreviven a recarga/cierre de pestaña | Semana 5 |
+| RF-07 | Sincronizar pendientes al recuperar conexión | El evento `online` envía la operación al endpoint HTTP sintético; reintentos con la misma clave no crean un segundo registro y los conflictos conservan ambas versiones | Semana 5, endpoint sintético |
 | RF-08 | Permitir que un auditor marque un hallazgo crítico como atendido | Al marcar un hallazgo como atendido, su estado cambia y queda visible en el historial de la inspección correspondiente | Futuro |
 
 ## 4. Requisitos no funcionales
 
-**Reproducibilidad (ahora).** En una copia limpia del repositorio, con Node 20.19+ y npm 10+ declarados, `npm ci` seguido de `npm run build` termina con código de salida 0. Se comprueba localmente y en la ejecución correspondiente de GitHub Actions, en cada entrega semanal antes de reportar el SHA final.
+**Reproducibilidad (ahora).** En una copia limpia del repositorio, con Node 22.18+ y npm 10+ declarados, `npm ci` seguido de `make verify` termina con código de salida 0. Se comprueba localmente y en GitHub Actions antes de reportar el SHA final.
 
 **Accesibilidad (ahora).** Las etiquetas de estado ("Sin incidencias", "Requiere atención") no dependen únicamente del color para transmitir su significado, ya que van acompañadas de texto; el contraste de texto sobre fondo cumple una relación mínima aproximada de 4.5:1 (referencia WCAG AA). Se comprueba con inspección manual y la herramienta de contraste de DevTools, al revisar la interfaz existente esta semana.
 
-**Seguridad (futuro).** Cuando se implemente el formulario de registro de hallazgos (RF-05), la entrada del usuario se valida y sanea antes de guardarse, evitando datos malformados o inyección de código. Se comprobará con pruebas manuales de entrada inválida en la semana en que se construya el formulario.
+**Seguridad (Semana 5, validación básica).** El formulario valida campos obligatorios, límites de longitud y hallazgos enteros no negativos; el esquema valida fechas, timestamps, revisiones y consistencia de identificadores. No se afirma sanitización de contenido enriquecido ni protección de autenticación, que no forman parte de este formulario sintético.
 
 **Privacidad (ahora y futuro).** La aplicación no muestra ni almacena datos personales reales de estudiantes, docentes o personal; únicamente usa los identificadores, nombres de laboratorio y correos institucionales ficticios declarados en la sección 5. Se comprueba revisando el código y los datos de prueba antes de cada commit.
 
 **Rendimiento (futuro; cifra ilustrativa, no medida aún).** Con 100 registros sintéticos cargados, se propone que el listado de inspecciones se renderice en menos de 2 segundos bajo una conexión 4G simulada. Se medirá con la pestaña Performance de DevTools en cinco ejecuciones bajo la misma conexión, cuando se implemente la carga dinámica de datos (no aplica a los datos fijos de Semana 1).
 
-**Offline futuro.** Un hallazgo capturado sin conexión (Escenario 2) persiste en almacenamiento local del dispositivo del técnico y se sincroniza automáticamente al recuperar conexión, sin pérdida ni duplicación. Se comprobará simulando pérdida de conexión (modo avión o límite de red en DevTools), capturando un registro, reconectando y verificando que quede sincronizado exactamente una vez, en la semana en que se implemente manifest/service worker/cola de sincronización.
+**Offline (Semana 5).** Una captura sin conexión persiste con su operación en una transacción IndexedDB; al recuperar red se procesa con idempotency key, reintentos acotados y protección de revisiones fuera de orden. Se verifica con `tests/sync.spec.ts` y una prueba de navegador. El servidor sintético es en memoria; no garantiza persistencia remota tras reiniciar o escalar el servidor.
 
 ## 5. Datos sintéticos y límites
 

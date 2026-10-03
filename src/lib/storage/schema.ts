@@ -58,8 +58,16 @@ const isRevision = (value: unknown): value is number =>
 
 const isTimestamp = (value: unknown): value is string =>
   typeof value === "string" &&
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(value) &&
-  !Number.isNaN(Date.parse(value));
+  (() => {
+    const match = /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.\d{1,3})?(?:Z|([+-])(\d{2}):(\d{2}))$/.exec(value);
+    if (!match || !isCalendarDate(match[1]) || Number.isNaN(Date.parse(value))) return false;
+
+    const [, , hour, minute, second, , offsetHour = "0", offsetMinute = "0"] = match;
+    const offsetHours = Number(offsetHour);
+    const offsetMinutes = Number(offsetMinute);
+    return Number(hour) <= 23 && Number(minute) <= 59 && Number(second) <= 59 &&
+      offsetHours <= 14 && offsetMinutes <= 59 && (offsetHours < 14 || offsetMinutes === 0);
+  })();
 
 const isCalendarDate = (value: unknown): value is string => {
   if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
@@ -156,4 +164,8 @@ export function upgradeInspectionDatabase(database: IDBDatabase, transaction: ID
   const conflicts = getOrCreateStore(database, transaction, INSPECTION_STORES.conflicts, "conflictId");
   ensureIndex(conflicts, "inspectionId", "inspectionId");
   ensureIndex(conflicts, "detectedAt", "detectedAt");
+}
+
+export function isRemoteInspection(value: unknown): value is RemoteInspection {
+  return isRecord(value) && isInspection(value.inspection) && isRevision(value.revision);
 }

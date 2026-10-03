@@ -5,7 +5,7 @@ import { inspections as seedInspections, type Inspection } from "../lib/data/ins
 import { InspectionList } from "./inspection-list";
 import { createStoredInspection, IndexedDbInspectionStore, openInspectionDatabase } from "../lib/storage/inspection-store";
 import type { InspectionConflict, StoredInspection } from "../lib/storage/schema";
-import { enqueueOperation, processPendingOperations } from "../lib/sync/queue";
+import { processPendingOperations, retryDelayMs } from "../lib/sync/queue";
 import { resolveInspectionConflict } from "../lib/sync/conflict-policy";
 import { createSyntheticTransport } from "../lib/sync/synthetic-transport";
 
@@ -19,6 +19,9 @@ export function InspectionWorkspace() {
   const storeRef = useRef<IndexedDbInspectionStore | null>(null);
   const transportRef = useRef(createSyntheticTransport());
   const syncingRef = useRef(false);
+  const syncRequestedRef = useRef(false);
+  const captureInProgressRef = useRef(false);
+  const retryTimerRef = useRef<number | null>(null);
   const [records, setRecords] = useState<StoredInspection[]>([]);
   const [conflicts, setConflicts] = useState<InspectionConflict[]>([]);
   const [message, setMessage] = useState("Cargando registros locales…");
@@ -34,17 +37,38 @@ export function InspectionWorkspace() {
 
   const synchronize = useCallback(async () => {
     const store = storeRef.current;
-    if (!store || syncingRef.current || !navigator.onLine) return;
+    if (!store) return;
+    if (syncingRef.current) {
+      syncRequestedRef.current = true;
+      return;
+    }
+    if (!navigator.onLine) return;
+    if (retryTimerRef.current !== null) {
+      window.clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
     syncingRef.current = true;
     setError(null);
     try {
       const outcomes = await processPendingOperations(store, transportRef.current, resolveInspectionConflict, isoNow);
       if (outcomes.length) setMessage(`Sincronización terminada: ${outcomes.map((item) => item.kind).join(", ")}.`);
+      const retry = outcomes.find((item) => item.kind === "retry-scheduled");
+      if (retry?.kind === "retry-scheduled" && navigator.onLine) {
+        retryTimerRef.current = window.setTimeout(() => {
+          retryTimerRef.current = null;
+          window.dispatchEvent(new Event("online"));
+        }, retryDelayMs(retry.attempts));
+      }
       await refresh();
     } catch (cause) {
       setError(`No se perdió ninguna operación: la cola local se conserva. Error recuperable: ${cause instanceof Error ? cause.message : "transporte o almacenamiento"}.`);
     } finally {
       syncingRef.current = false;
+      const shouldRunAgain = syncRequestedRef.current;
+      syncRequestedRef.current = false;
+      if (shouldRunAgain && navigator.onLine) {
+        window.queueMicrotask(() => window.dispatchEvent(new Event("online")));
+      }
     }
   }, [refresh]);
 
@@ -71,35 +95,54 @@ export function InspectionWorkspace() {
     })();
     const online = () => { setMessage("Conexión recuperada; procesando cola local…"); void synchronize(); };
     window.addEventListener("online", online);
-    return () => { active = false; window.removeEventListener("online", online); };
+    return () => {
+      active = false;
+      window.removeEventListener("online", online);
+      if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
+      storeRef.current?.close();
+    };
   }, [refresh, synchronize]);
 
   async function capture(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const location = String(form.get("location") ?? "").trim();
-    const inspector = String(form.get("inspector") ?? "").trim();
-    const summary = String(form.get("summary") ?? "").trim();
-    const findings = Number(form.get("findings"));
-    if (!location || !inspector || !summary || !Number.isSafeInteger(findings) || findings < 0) {
-      setError("Complete ubicación, responsable y resumen; los hallazgos deben ser un entero igual o mayor que cero.");
-      return;
-    }
-    const store = storeRef.current;
-    if (!store) { setError("El almacenamiento local aún no está listo."); return; }
-    const inspection: Inspection = { id: `inspection-${makeKey()}`, location, inspector, summary, findings, date: new Date().toISOString().slice(0, 10), status: findings ? "attention" : "ok", statusLabel: findings ? "Requiere atención" : "Sin incidencias" };
-    const key = makeKey();
+    if (captureInProgressRef.current) return;
+    captureInProgressRef.current = true;
+    const formElement = event.currentTarget;
     try {
+      const form = new FormData(formElement);
+      const location = String(form.get("location") ?? "").trim();
+      const inspector = String(form.get("inspector") ?? "").trim();
+      const summary = String(form.get("summary") ?? "").trim();
+      const findings = Number(form.get("findings"));
+      if (!location || !inspector || !summary || !Number.isSafeInteger(findings) || findings < 0) {
+        setError("Complete ubicación, responsable y resumen; los hallazgos deben ser un entero igual o mayor que cero.");
+        return;
+      }
+      const store = storeRef.current;
+      if (!store) { setError("El almacenamiento local aún no está listo."); return; }
+      const inspection: Inspection = { id: `inspection-${makeKey()}`, location, inspector, summary, findings, date: new Date().toISOString().slice(0, 10), status: findings ? "attention" : "ok", statusLabel: findings ? "Requiere atención" : "Sin incidencias" };
+      const key = makeKey();
       const record = createStoredInspection(inspection, key, isoNow());
-      await store.saveInspection(record);
-      await enqueueOperation(store, { idempotencyKey: key, inspectionId: inspection.id, payload: inspection, baseServerRevision: null, createdAt: record.updatedAt, attempts: 0 });
-      await refresh();
-      event.currentTarget.reset();
+      try {
+        await store.saveCapture(record, { idempotencyKey: key, inspectionId: inspection.id, payload: inspection, baseServerRevision: null, createdAt: record.updatedAt, attempts: 0 });
+      } catch (cause) {
+        setError(`No se pudo guardar la captura; no se confirmó el cambio. ${cause instanceof Error ? cause.message : "Error de almacenamiento"}. Revise IndexedDB e intente de nuevo.`);
+        return;
+      }
+      formElement.reset();
       setError(null);
       setMessage(navigator.onLine ? "Captura guardada localmente; sincronizando…" : "Captura guardada sin conexión y marcada como pendiente.");
+      try {
+        await refresh();
+      } catch (cause) {
+        setError(`La captura quedó guardada localmente, pero no se pudo actualizar la vista: ${cause instanceof Error ? cause.message : "error de lectura"}.`);
+        return;
+      }
       await synchronize();
     } catch (cause) {
-      setError(`La captura no se confirmó: ${cause instanceof Error ? cause.message : "error de almacenamiento"}. Revise IndexedDB e intente de nuevo.`);
+      setError(`No se pudo preparar la captura: ${cause instanceof Error ? cause.message : "error de validación"}.`);
+    } finally {
+      captureInProgressRef.current = false;
     }
   }
 

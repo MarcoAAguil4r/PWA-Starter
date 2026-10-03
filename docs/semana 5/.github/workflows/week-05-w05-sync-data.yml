@@ -17,7 +17,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup 1
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.18.0
+          cache: npm
+      - name: Instalar dependencias
         shell: bash
         run: |
           set -euo pipefail
@@ -32,6 +37,7 @@ jobs:
         run: |
           set -euo pipefail
           test -e 'src/lib/sync/queue.ts' && test -e 'src/lib/storage/schema.ts' && test -e 'src/lib/sync/conflict-policy.ts' && test -e 'docs/sync-policy.md' && test -e 'tests/sync.spec.ts'
+          test -e 'src/lib/storage/inspection-store.ts' && test -e 'src/lib/sync/synthetic-server.ts' && test -e 'src/app/api/inspections/sync/route.ts' && test -e 'src/components/inspection-workspace.tsx'
       - name: AC-03 - Existe una suite ejecutable de pruebas.
         shell: bash
         run: |
@@ -44,6 +50,5 @@ jobs:
           name: academic-evidence-w05-sync-data
           if-no-files-found: ignore
           path: |
-            evaluation-result.json
-            coverage/
-            test-results/
+            reports/verification.json
+            reports/rendering-metrics.json

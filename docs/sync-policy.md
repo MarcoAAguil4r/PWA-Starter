@@ -22,18 +22,20 @@ Cada operación de escritura conserva su `idempotencyKey` estable durante todos 
 
 `resolveInspectionConflict()` aplica estas reglas en orden:
 
-1. Si el payload remoto ya coincide con el local, lo trata como aplicado. Esto cubre la respuesta perdida seguida de un reintento idempotente.
-2. Si la respuesta remota tiene una revisión anterior a `baseServerRevision`, la ignora como respuesta fuera de orden.
+1. Si la respuesta remota tiene una revisión anterior a `baseServerRevision`, la ignora aunque el payload coincida; así no retrocede la revisión confirmada.
+2. Si el payload remoto ya coincide con el local, lo trata como aplicado. Esto cubre la respuesta perdida seguida de un reintento idempotente.
 3. Si la revisión remota coincide con `baseServerRevision`, permite enviar el cambio local con esa revisión como precondición.
 4. Si la revisión remota avanzó, el servidor prevalece como versión canónica y se devuelve un `InspectionConflict` con ambas copias y sus revisiones. La copia local no se descarta: debe persistirse en `conflicts` y marcarse para resolución explícita posterior.
 
 No se fusionan campos automáticamente ni se comparan relojes. Esta política evita sobrescribir silenciosamente una edición remota y evita perder el borrador local. La interfaz o el operador podrá decidir posteriormente si descarta o vuelve a aplicar la copia local, siempre contra la revisión remota más reciente.
 
-## Límites de esta integración
+## Transporte HTTP y límites
 
-La aplicación usa `IndexedDbInspectionStore` en el navegador: las capturas y la cola sobreviven a la recarga, y el evento `online` vuelve a procesar la cola. Un cerrojo en memoria evita dos procesos de sincronización simultáneos en la misma pestaña. Los errores de IndexedDB o transporte se muestran como recuperables y la operación no se elimina antes de una confirmación, conflicto o abandono explícito.
+La aplicación usa `IndexedDbInspectionStore` en el navegador: captura y operación se escriben en una sola transacción para que un cierre de pestaña no deje un registro `pending` sin cola. La cola sobrevive a recargas. El evento `online` vuelve a procesar pendientes; los fallos transitorios se reintentan con backoff exponencial acotado, hasta cinco intentos. Las respuestas remotas obsoletas permanecen pendientes sin reintento automático en bucle. Un cerrojo en memoria evita dos procesos de sincronización simultáneos en la misma pestaña.
 
-El transporte es `createSyntheticTransport()`: un adaptador determinista sólo para la demo y pruebas locales; **no es un backend ni sincroniza entre dispositivos**. El límite de reintentos es 5 y los errores no recuperables se abandonan explícitamente. La resolución de conflicto persiste el `InspectionConflict` con ambos snapshots antes de marcar el registro local como `conflict`. No hay aún UI para resolver ese conflicto ni reintento con espera exponencial entre intentos.
+`createSyntheticTransport()` envía por HTTP a `/api/inspections/sync`. El endpoint valida la operación, exige la revisión base y guarda idempotency keys y revisiones en un store sintético del proceso. Esto demuestra interacción cliente-servidor e idempotencia frente a reintentos y pestañas mientras vive el proceso. **No es un backend persistente de producción**: al reiniciar o escalar el servidor se pierde o divide su estado y no existe una base de datos compartida. Para producción se requiere conectar un servicio persistente.
+
+Los errores no recuperables se abandonan explícitamente. La resolución de conflicto persiste el `InspectionConflict` con ambos snapshots antes de marcar el registro local como `conflict`. La UI muestra ambas versiones, pero todavía no ofrece una acción para resolver el conflicto.
 
 
 ## Cola de sincronización (Integrante 2)
@@ -49,3 +51,9 @@ El transporte es `createSyntheticTransport()`: un adaptador determinista sólo p
 **Protección ante respuestas fuera de orden:** las operaciones se procesan en orden de `createdAt`. Cuando `resolveInspectionConflict` clasifica una respuesta como `ignore-stale-response` (revisión remota anterior a la ya confirmada), la cola no toca el estado local ni retira la operación — se ignora la respuesta obsoleta y la operación sigue pendiente para la siguiente ronda.
 
 **Integración de interfaz:** `InspectionWorkspace` abre IndexedDB, siembra sólo los tres ejemplos sintéticos iniciales cuando la base está vacía y desde entonces representa los registros persistidos. El formulario valida los datos antes de crear una operación con clave idempotente estable. `tests/sync.spec.ts` usa un adaptador programable y el adaptador de la interfaz es también sintético; ninguno debe confundirse con un backend real.
+
+## Evidencia reproducible
+
+- `tests/sync.spec.ts` comprueba validación de datos, commit/rollback atómico y reapertura de IndexedDB, idempotencia HTTP del servidor sintético, deduplicación, reintentos con límite, conflictos y respuestas fuera de orden.
+- `npm ci` verifica la instalación limpia; `npm test` ejecuta el spec junto con las regresiones anteriores; `make verify` añade estructura, build y check público, y genera `reports/verification.json` y `reports/rendering-metrics.json`.
+- La prueba de navegador de la actividad debe comprobar captura online/offline, estado `pending`, recuperación por `online`, estado final `synced` y ausencia de duplicados.

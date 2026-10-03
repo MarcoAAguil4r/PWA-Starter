@@ -25,12 +25,12 @@ export function resolveInspectionConflict(
   remote: RemoteInspection,
   detectedAt: string
 ): ConflictDecision {
-  if (sameInspection(local.inspection, remote.inspection)) {
-    return { kind: "already-applied", remote };
-  }
-
   if (local.baseServerRevision !== null && remote.revision < local.baseServerRevision) {
     return { kind: "ignore-stale-response", remote };
+  }
+
+  if (sameInspection(local.inspection, remote.inspection)) {
+    return { kind: "already-applied", remote };
   }
 
   if (local.baseServerRevision === remote.revision) {

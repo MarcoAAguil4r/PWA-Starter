@@ -1,13 +1,17 @@
 import assert from "node:assert/strict";
+import "fake-indexeddb/auto";
 import {
   INSPECTION_STORES,
   isInspection,
   isInspectionConflict,
+  isRemoteInspection,
   isStoredInspection,
   isSyncOperation,
   upgradeInspectionDatabase
 } from "../src/lib/storage/schema.ts";
 import { resolveInspectionConflict } from "../src/lib/sync/conflict-policy.ts";
+import { InMemoryInspectionSyncServer } from "../src/lib/sync/synthetic-server.ts";
+import { IndexedDbInspectionStore, openInspectionDatabase } from "../src/lib/storage/inspection-store.ts";
 import type { Inspection } from "../src/lib/data/inspections.ts";
 import type { InspectionConflict, RemoteInspection, StoredInspection, SyncOperation } from "../src/lib/storage/schema.ts";
 
@@ -71,6 +75,8 @@ assert.equal(isInspection({ ...inspection, date: "2026-02-31" }), false);
 assert.equal(isStoredInspection(storedInspection()), true);
 assert.equal(isStoredInspection(storedInspection({ id: "different-id" })), false);
 assert.equal(isStoredInspection(storedInspection({ updatedAt: "yesterday" })), false);
+assert.equal(isStoredInspection(storedInspection({ updatedAt: "2026-02-31T12:00:00.000Z" })), false);
+assert.equal(isStoredInspection(storedInspection({ updatedAt: "2026-01-01T00:00:00+14:30" })), false);
 assert.equal(
   isSyncOperation({
     idempotencyKey: "operation-synthetic-001",
@@ -82,6 +88,8 @@ assert.equal(
   }),
   true
 );
+assert.equal(isRemoteInspection({ inspection, revision: 1 }), true);
+assert.equal(isRemoteInspection({ inspection, revision: -1 }), false);
 
 const { database, transaction, stores } = fakeDatabase();
 upgradeInspectionDatabase(database as unknown as IDBDatabase, transaction as unknown as IDBTransaction);
@@ -94,6 +102,44 @@ assert.equal(stores.get(INSPECTION_STORES.inspections)?.keyPath, "id");
 assert.equal(stores.get(INSPECTION_STORES.syncQueue)?.keyPath, "idempotencyKey");
 assert.equal(stores.get(INSPECTION_STORES.conflicts)?.keyPath, "conflictId");
 assert.equal(stores.get(INSPECTION_STORES.inspections)?.indexes.has("syncStatus"), true);
+
+const indexedDb = await openInspectionDatabase();
+const indexedStore = new IndexedDbInspectionStore(indexedDb);
+const atomicInspection: Inspection = { ...inspection, id: "inspection-atomic-001" };
+const atomicRecord = storedInspection({
+  id: atomicInspection.id,
+  inspection: atomicInspection,
+  idempotencyKey: "operation-atomic-001"
+});
+const atomicOperation: SyncOperation = {
+  idempotencyKey: atomicRecord.idempotencyKey,
+  inspectionId: atomicInspection.id,
+  payload: atomicInspection,
+  baseServerRevision: null,
+  createdAt: timestamp,
+  attempts: 0
+};
+await indexedStore.saveCapture(atomicRecord, atomicOperation);
+assert.equal((await indexedStore.getInspection(atomicInspection.id))?.syncStatus, "pending");
+assert.equal((await indexedStore.listOperations()).length, 1);
+
+const rollbackInspection: Inspection = { ...inspection, id: "inspection-atomic-rollback-001" };
+const rollbackRecord = storedInspection({
+  id: rollbackInspection.id,
+  inspection: rollbackInspection,
+  idempotencyKey: atomicRecord.idempotencyKey
+});
+await assert.rejects(
+  indexedStore.saveCapture(rollbackRecord, { ...atomicOperation, inspectionId: rollbackInspection.id, payload: rollbackInspection })
+);
+assert.equal(await indexedStore.getInspection(rollbackInspection.id), null, "el fallo al encolar debe revertir también la inspección");
+assert.equal((await indexedStore.listOperations()).length, 1, "la operación original debe mantenerse intacta");
+indexedDb.close();
+const reopenedDatabase = await openInspectionDatabase();
+const reopenedStore = new IndexedDbInspectionStore(reopenedDatabase);
+assert.equal((await reopenedStore.getInspection(atomicInspection.id))?.syncStatus, "pending");
+assert.equal((await reopenedStore.listOperations())[0]?.idempotencyKey, atomicOperation.idempotencyKey);
+reopenedDatabase.close();
 
 const unchangedRemote = { inspection, revision: 4 };
 assert.deepEqual(resolveInspectionConflict(storedInspection(), unchangedRemote, timestamp), {
@@ -109,6 +155,11 @@ assert.deepEqual(resolveInspectionConflict(localEdit, { inspection, revision: 4 
 });
 
 const staleRemote = { inspection, revision: 3 };
+assert.equal(
+  resolveInspectionConflict(storedInspection(), staleRemote, timestamp).kind,
+  "ignore-stale-response",
+  "un payload coincidente no debe hacer retroceder una revisión confirmada"
+);
 assert.deepEqual(resolveInspectionConflict(localEdit, staleRemote, timestamp), {
   kind: "ignore-stale-response",
   remote: staleRemote
@@ -123,6 +174,50 @@ if (decision.kind === "preserve-conflict") {
   assert.equal(isInspectionConflict(decision.conflict), true);
 }
 
+const server = new InMemoryInspectionSyncServer();
+const serverOperation = {
+  idempotencyKey: "server-operation-001",
+  inspectionId: inspection.id,
+  payload: inspection,
+  baseServerRevision: null,
+  createdAt: timestamp,
+  attempts: 0
+};
+const serverFirstResult = server.apply(serverOperation);
+assert.equal(serverFirstResult.ok, true);
+if (serverFirstResult.ok) {
+  assert.equal(serverFirstResult.remote.revision, 1);
+  assert.equal(isRemoteInspection(serverFirstResult.remote), true);
+}
+assert.deepEqual(server.apply(serverOperation), serverFirstResult, "repetir la misma clave devuelve la respuesta original");
+const reusedKey = server.apply({
+  ...serverOperation,
+  payload: { ...inspection, summary: "Payload diferente con la misma clave." }
+});
+assert.deepEqual(reusedKey, { ok: false, retryable: false, reason: "idempotency-key-reused" });
+
+const updatedPayload = { ...inspection, summary: "Actualización remota sintética." };
+const updateResult = server.apply({
+  ...serverOperation,
+  idempotencyKey: "server-operation-002",
+  payload: updatedPayload,
+  baseServerRevision: 1
+});
+assert.equal(updateResult.ok, true);
+if (updateResult.ok) assert.equal(updateResult.remote.revision, 2);
+
+const staleWrite = server.apply({
+  ...serverOperation,
+  idempotencyKey: "server-operation-stale",
+  payload: { ...inspection, summary: "Edición concurrente sintética." },
+  baseServerRevision: 1
+});
+assert.equal(staleWrite.ok, true);
+if (staleWrite.ok) {
+  assert.equal(staleWrite.remote.revision, 2);
+  assert.equal(staleWrite.remote.inspection.summary, "Actualización remota sintética.");
+}
+
 console.log("sync.spec.ts: PASS (schema, validación y política de conflictos)");
 
 // ---------------------------------------------------------------------------
@@ -131,8 +226,13 @@ console.log("sync.spec.ts: PASS (schema, validación y política de conflictos)"
 
 const {
   enqueueOperation,
-  processPendingOperations
+  processPendingOperations,
+  retryDelayMs
 } = await import("../src/lib/sync/queue.ts");
+
+assert.equal(retryDelayMs(1), 1_000);
+assert.equal(retryDelayMs(2), 2_000);
+assert.equal(retryDelayMs(8), 30_000);
 
 function fakeQueueStore(
   seedInspections: StoredInspection[] = [],
@@ -258,7 +358,7 @@ function pendingOperation(overrides: Partial<SyncOperation> = {}): SyncOperation
   );
   const transport = createSyntheticTransport([{ ok: true, remote: { inspection, revision: 2 } }]);
   const outcomes = await processPendingOperations(store, transport, resolveInspectionConflict, fixedNow);
-  assert.equal(outcomes[0].kind, "retry-scheduled");
+  assert.equal(outcomes[0].kind, "stale-response");
   assert.equal(operations.size, 1, "la operación debe seguir pendiente");
   assert.equal(inspections.get(inspection.id)?.syncStatus, "pending", "el estado local no debe modificarse");
 }

@@ -35,7 +35,13 @@ export type QueueOutcome =
   | { idempotencyKey: string; kind: "already-applied" }
   | { idempotencyKey: string; kind: "conflict" }
   | { idempotencyKey: string; kind: "retry-scheduled"; attempts: number }
+  | { idempotencyKey: string; kind: "stale-response" }
   | { idempotencyKey: string; kind: "abandoned"; reason: string };
+
+export function retryDelayMs(attempts: number): number {
+  const attempt = Math.max(1, Math.floor(attempts));
+  return Math.min(30_000, 1_000 * 2 ** (attempt - 1));
+}
 
 export async function enqueueOperation(
   store: SyncQueueStore,
@@ -111,7 +117,7 @@ export async function processPendingOperations(
     }
 
     if (decision.kind === "ignore-stale-response") {
-      outcomes.push({ idempotencyKey: operation.idempotencyKey, kind: "retry-scheduled", attempts: operation.attempts });
+      outcomes.push({ idempotencyKey: operation.idempotencyKey, kind: "stale-response" });
       continue;
     }
 

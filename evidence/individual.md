@@ -185,13 +185,13 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 
 ## Semana 5
 
-###  Marco Antonio Aguilar 
-- **Commit asociado:** pendiente del push de esta integración.
-- **Contribución concreta:** Definí el esquema versionado de IndexedDB para inspecciones, cola y conflictos en `src/lib/storage/schema.ts`; agregué validadores de datos; implementé la política determinista en `src/lib/sync/conflict-policy.ts`; documenté los contratos y límites en `docs/sync-policy.md`; y agregué `tests/sync.spec.ts`.
-- **Decisión técnica que puedo explicar:** Si una revisión remota avanzó desde la revisión base local, la versión del servidor queda como canónica, pero ambas copias se conservan en el registro de conflicto. Una respuesta remota con revisión anterior se ignora; los timestamps no determinan qué versión gana.
-- **Pruebas ejecutadas y resultado real:** `node tests/sync.spec.ts` pasó para esquema, validación y política de conflictos. `npm test` y `npm run build` también terminaron correctamente. Node emitió advertencias de modo de módulo en los specs TypeScript.
-- **Alcance y limitación:** La prueba usa una base IndexedDB simulada; no sustituye una prueba de persistencia real en navegador ni una API remota. La cola y la captura se integraron posteriormente y `tests/sync.spec.ts` ya forma parte de `npm test`.
-- **Uso de IA:** GitHub Copilot apoyó la definición y edición del esquema, la política, las pruebas y la documentación. Debo revisar los cambios y poder explicar y modificar la política antes de entregar.
+### Marco Antonio Aguilar (3523110229)
+- **Commit asociado:** se registrará después del commit de implementación.
+- **Contribución concreta:** Definí el esquema versionado de IndexedDB, validadores y política de conflictos; después integré la escritura atómica de inspección/cola, un endpoint HTTP sintético idempotente, reintentos con backoff, el formulario de captura y pruebas de IndexedDB realista con `fake-indexeddb`. Actualicé la documentación, los checks públicos y la evidencia.
+- **Decisión técnica que puedo explicar:** Una captura y su operación se confirman en la misma transacción IndexedDB. El endpoint compara `baseServerRevision`, aplica claves idempotentes y conserva la versión local y remota en conflictos. Una revisión obsoleta no puede hacer retroceder la revisión local.
+- **Pruebas ejecutadas y resultado real:** `npm ci --ignore-scripts --no-audit --no-fund` terminó correctamente. `node tests/sync.spec.ts` pasó los casos de rollback/reapertura, validación, servidor sintético, deduplicación, reintentos y conflictos. `make verify` terminó con `Verificación técnica: pass`: suite, build, escaneo de secretos, check público y medición SSR/CSR pasaron. En navegador, la captura offline quedó `pending` y pasó automáticamente a `synced` al reconectar, sin alerta falsa. Node emitió advertencias `MODULE_TYPELESS_PACKAGE_JSON` en specs TypeScript, sin afectar los resultados.
+- **Alcance y limitación:** El endpoint HTTP guarda sus revisiones e idempotency keys en memoria del proceso; demuestra el intercambio cliente-servidor, pero no sustituye un backend/base de datos persistente en producción. La UI muestra conflictos, pero aún no permite resolverlos manualmente.
+- **Uso de IA:** GitHub Copilot apoyó cambios en esquema, store, cola, endpoint, formulario, pruebas, checks y documentación. Debo revisar el resultado, ejecutar la verificación final y poder explicar/modificar las decisiones antes de entregar.
 
 ## Dulce Acevedo Miguel
 

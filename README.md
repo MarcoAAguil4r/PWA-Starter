@@ -1,10 +1,10 @@
 # PWA de inspecciones de laboratorio — proyecto del equipo
 
-Comiencen por `START_HERE.md` y lean `ACTIVIDAD-01.md`. Este es un proyecto acumulativo: un repositorio privado por equipo durante el curso. Las indicaciones de Semana 1 se conservan como contexto histórico; la implementación actual también integra los artefactos de Semana 2 y Semana 3.
+Comiencen por `START_HERE.md` y lean `ACTIVIDAD-01.md`. Este es un proyecto acumulativo: un repositorio privado por equipo durante el curso. Las indicaciones de Semana 1 se conservan como contexto histórico; la implementación actual integra las actividades de las semanas 2 a 5.
 
 ## Entorno
 
-Node.js 22.18 o posterior, npm 10 o posterior, Git y cuenta de GitHub. Node 22.18+ permite ejecutar los specs TypeScript de Semana 3 sin agregar un runner. No se requiere Make. Registren aquí las versiones usadas (`node --version`, `npm --version`) y cualquier dificultad de entorno que encuentren.
+Node.js 22.18 o posterior, npm 10 o posterior, Git y cuenta de GitHub. Node 22.18+ ejecuta los specs TypeScript sin agregar un runner. No se requiere Make. Registren aquí las versiones usadas (`node --version`, `npm --version`) y cualquier dificultad de entorno que encuentren.
 
 ## Ejecución
 
@@ -73,7 +73,7 @@ Inviten a los integrantes y al docente al mismo repositorio privado. Cada person
 - `evidence/`: evidencia propia de cada integrante.
 - `tests/`: pruebas base, de manifest y los specs de comportamiento del worker de Semana 3.
 
-Registren aquí sus supuestos y limitaciones de ejecución. La aplicación implementa una cobertura de recursos y navegación limitada mediante Service Worker, pero no captura ni sincroniza inspecciones offline. No incluyan datos personales reales en el producto, archivos `.env` ni credenciales. La identificación de integrantes se conserva en el repositorio privado y Classroom.
+La app captura inspecciones sintéticas en IndexedDB, encola cada captura en la misma transacción y sincroniza al recuperar red. El endpoint `/api/inspections/sync` es un servidor sintético en memoria para la actividad: valida revisiones e idempotency keys, pero no es almacenamiento persistente de producción ni comparte datos entre reinicios del servidor. No incluyan datos personales reales, archivos `.env` ni credenciales.
 
 ### Semana 4: listado SSR y detalle CSR
 
@@ -95,7 +95,7 @@ La pantalla `/inspecciones` conserva las capturas sintéticas en IndexedDB (`pwa
 
 Al recuperar conectividad, el evento `online` procesa la cola; también puede usarse **Sincronizar pendientes**. Un cerrojo por pestaña evita ejecuciones simultáneas. Cada operación conserva su clave idempotente y se reintenta hasta cinco veces sólo ante errores recuperables; un error no recuperable se abandona de manera explícita. Las respuestas remotas obsoletas no modifican una edición local reciente. Si hay conflicto, se persisten y muestran las copias local y remota. Consulte la [política de sincronización](docs/sync-policy.md).
 
-No hay API remota en este proyecto. `createSyntheticTransport()` es un adaptador determinista para demostrar y probar el flujo; no es un backend de producción ni comparte datos entre navegadores o dispositivos.
+`createSyntheticTransport()` usa HTTP hacia `/api/inspections/sync`. El endpoint sintético permite probar un flujo cliente-servidor reproducible y compartir idempotencia entre pestañas durante la vida del proceso; su estado se pierde al reiniciar el servidor, por lo que no sustituye una API y base de datos de producción.
 
 Para verificar Semana 5 en un entorno con Node 22.18+ y Bash:
 

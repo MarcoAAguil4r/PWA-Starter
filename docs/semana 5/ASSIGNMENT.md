@@ -47,7 +47,11 @@ Nivel 8/10. La dificultad proviene de integrar restricciones, justificar trade-o
 
 - `src/lib/sync/queue.ts`
 - `src/lib/storage/schema.ts`
+- `src/lib/storage/inspection-store.ts`
 - `src/lib/sync/conflict-policy.ts`
+- `src/lib/sync/synthetic-server.ts`
+- `src/app/api/inspections/sync/route.ts`
+- `src/components/inspection-workspace.tsx`
 - `docs/sync-policy.md`
 - `tests/sync.spec.ts`
 - `README.md` con ejecución, supuestos y evidencia.
@@ -99,7 +103,7 @@ El evaluador usa el commit fijado, ejecuta el workflow correspondiente y revisa 
 
 ## Automation plan
 
-Objetivo de automatización: 90% o más. El workflow instala, compila, ejecuta pruebas públicas y checks privados, y publica `evaluation-result.json`, cobertura y resultados. La revisión manual esperada es 0 puntos y hasta 5 minutos solo para banderas o evidencia individual.
+Objetivo de automatización: 90% o más. El workflow instala, compila, ejecuta las pruebas públicas y publica `reports/verification.json` y `reports/rendering-metrics.json`. La revisión manual esperada es 0 puntos y hasta 5 minutos solo para banderas o evidencia individual.
 
 ## Public tests
 

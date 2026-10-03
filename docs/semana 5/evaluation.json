@@ -40,9 +40,8 @@
       "npm ci --ignore-scripts --no-audit --no-fund"
     ],
     "artifactPaths": [
-      "evaluation-result.json",
-      "coverage/",
-      "test-results/"
+      "reports/verification.json",
+      "reports/rendering-metrics.json"
     ]
   },
   "automationPolicy": {
@@ -73,7 +72,7 @@
       "type": "automatic",
       "points": 3,
       "evidence": "Los artefactos declarados para la actividad existen.",
-      "command": "test -e 'src/lib/sync/queue.ts' && test -e 'src/lib/storage/schema.ts' && test -e 'src/lib/sync/conflict-policy.ts' && test -e 'docs/sync-policy.md' && test -e 'tests/sync.spec.ts'"
+      "command": "test -e 'src/lib/sync/queue.ts' && test -e 'src/lib/storage/schema.ts' && test -e 'src/lib/storage/inspection-store.ts' && test -e 'src/lib/sync/conflict-policy.ts' && test -e 'src/lib/sync/synthetic-server.ts' && test -e 'src/app/api/inspections/sync/route.ts' && test -e 'src/components/inspection-workspace.tsx' && test -e 'docs/sync-policy.md' && test -e 'tests/sync.spec.ts'"
     },
     {
       "id": "AC-03",

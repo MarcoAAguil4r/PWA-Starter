@@ -1,6 +1,6 @@
 # Contrato de pruebas
 
-Las pruebas son deterministas y usan respuestas, caché y rutas sintéticas. `npm test` ejecuta `tests/starter.spec.mjs`, `tests/manifest.spec.mjs`, `tests/service-worker.spec.ts` y `tests/offline.spec.ts`.
+Las pruebas son deterministas y usan respuestas, caché y datos sintéticos. `npm test` ejecuta los specs base, manifest, service worker, offline, rendering y sincronización.
 
 Semana 3 añade:
 
@@ -18,11 +18,11 @@ Node puede emitir una advertencia de tipo de módulo para ambos archivos, pero l
 
 ## Semana 5
 
-`sync.spec.ts` valida el esquema de IndexedDB, los datos sintéticos y las decisiones de conflicto sin servicios externos. Mientras se completa la integración de la suite, se ejecuta directamente:
+`sync.spec.ts` valida el esquema y las transacciones IndexedDB con `fake-indexeddb`, el endpoint sintético, la cola y las decisiones de conflicto. Está integrado en `npm test`; también puede ejecutarse directamente:
 
 ```bash
 node tests/sync.spec.ts
 ```
 
-La prueba no sustituye una validación en navegador ni prueba una API remota o la cola completa.
+El endpoint se prueba además desde la UI en navegador. El servidor de prueba conserva su estado solo en memoria y no reemplaza un backend persistente de producción.
 
