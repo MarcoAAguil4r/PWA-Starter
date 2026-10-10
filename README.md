@@ -110,3 +110,7 @@ bash "docs/semana 5/public-tests/check.sh"
 ```
 
 `npm test` incluye las regresiones anteriores y `tests/sync.spec.ts`: validación, persistencia representada por el store, captura pendiente, reintentos, límite, errores no recuperables, deduplicación, conflictos y respuestas fuera de orden. `.github/workflows/week-05-w05-sync-data.yml` ejecuta la misma verificación y publica los reportes generados.
+
+### Semana 6: capacidades del dispositivo y notificaciones
+
+La actividad solicita agregar evidencia opcional mediante cámara, geolocalización con permisos mínimos y notificaciones con fallback. El mapa de entregables, los responsables y las ramas independientes están en [el plan de trabajo de Semana 6](docs/semana%206/PLAN-DE-TRABAJO.md). Los adaptadores se ubican bajo `src/lib/device/`, el cliente de notificaciones bajo `src/lib/notifications/`, la documentación en `docs/capabilities.md` y las pruebas en `tests/capabilities.spec.ts`. El workflow ejecutable se guarda en `.github/workflows/`; el material de la actividad permanece bajo `docs/semana 6/`.
