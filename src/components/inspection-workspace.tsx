@@ -9,6 +9,7 @@ import { processPendingOperations, retryDelayMs } from "../lib/sync/queue";
 import { resolveInspectionConflict } from "../lib/sync/conflict-policy";
 import { createSyntheticTransport } from "../lib/sync/synthetic-transport";
 import { getNotificationPermission, requestNotificationPermission, showLocalNotification, type NotificationCapabilityStatus } from "../lib/notifications/client";
+import { CameraCaptureError, capturePhoto } from "../lib/device/camera";
 
 const isoNow = () => new Date().toISOString();
 
@@ -22,6 +23,8 @@ export function InspectionWorkspace() {
   const syncingRef = useRef(false);
   const syncRequestedRef = useRef(false);
   const captureInProgressRef = useRef(false);
+  const photoCaptureControllerRef = useRef<AbortController | null>(null);
+  const photoCaptureVersionRef = useRef(0);
   const lastNotifiedCaptureKeyRef = useRef<string | null>(null);
   const retryTimerRef = useRef<number | null>(null);
   const [records, setRecords] = useState<StoredInspection[]>([]);
@@ -30,7 +33,22 @@ export function InspectionWorkspace() {
   const [error, setError] = useState<string | null>(null);
   const [notificationPermission, setNotificationPermission] = useState<NotificationCapabilityStatus>("checking");
   const [notificationMessage, setNotificationMessage] = useState("Comprobando la disponibilidad de notificaciones…");
+  const [photoEvidence, setPhotoEvidence] = useState<Blob | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [photoMessage, setPhotoMessage] = useState("No se ha capturado evidencia fotográfica.");
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const [isCapturing, setIsCapturing] = useState(false);
   const capturedRecords = records.filter((record) => !seedInspections.some((seed) => seed.id === record.id));
+
+  useEffect(() => {
+    if (!photoEvidence) {
+      setPhotoPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(photoEvidence);
+    setPhotoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photoEvidence]);
 
   async function enableNotifications() {
     const result = await requestNotificationPermission();
@@ -51,6 +69,71 @@ export function InspectionWorkspace() {
     } catch {
       setNotificationMessage("No se pudo mostrar la notificación; la inspección continúa guardada localmente.");
     }
+  }
+
+  async function capturePhotoEvidence() {
+    if (isCapturing || photoCaptureControllerRef.current) return;
+    const controller = new AbortController();
+    const captureVersion = ++photoCaptureVersionRef.current;
+    photoCaptureControllerRef.current = controller;
+    setIsCapturing(true);
+    setPhotoError(null);
+    setPhotoMessage("Abriendo la cámara para capturar evidencia…");
+    try {
+      const photo = await capturePhoto({
+        facingMode: "environment",
+        quality: 0.85,
+        maxDimension: 1280,
+        signal: controller.signal
+      });
+      if (captureVersion !== photoCaptureVersionRef.current) return;
+      setPhotoEvidence(photo);
+      setPhotoMessage("Evidencia fotográfica capturada. Se conserva solo en memoria y no se enviará ni guardará.");
+    } catch (cause) {
+      if (captureVersion !== photoCaptureVersionRef.current) return;
+      if (cause instanceof CameraCaptureError) {
+        switch (cause.code) {
+          case "aborted":
+            setPhotoMessage("La captura de evidencia se canceló.");
+            break;
+          case "permission-denied":
+            setPhotoError("Se denegó el permiso de cámara. Puede registrar la inspección sin fotografía.");
+            break;
+          case "unsupported":
+          case "unavailable":
+            setPhotoError("La cámara no está disponible en este dispositivo o navegador. Puede registrar la inspección sin fotografía.");
+            break;
+          default:
+            setPhotoError(`No se pudo capturar la evidencia: ${cause.message}`);
+        }
+      } else {
+        setPhotoError("Ocurrió un error inesperado al capturar la evidencia. Puede registrar la inspección sin fotografía.");
+      }
+    } finally {
+      if (captureVersion === photoCaptureVersionRef.current) {
+        if (photoCaptureControllerRef.current === controller) photoCaptureControllerRef.current = null;
+        setIsCapturing(false);
+      }
+    }
+  }
+
+  function releasePhotoEvidence(message: string) {
+    photoCaptureVersionRef.current += 1;
+    photoCaptureControllerRef.current?.abort();
+    photoCaptureControllerRef.current = null;
+    setIsCapturing(false);
+    setPhotoEvidence(null);
+    setPhotoError(null);
+    setPhotoMessage(message);
+  }
+
+  function cancelPhotoCapture() {
+    if (!photoCaptureControllerRef.current) return;
+    releasePhotoEvidence("La captura de evidencia se canceló.");
+  }
+
+  function discardPhotoEvidence() {
+    releasePhotoEvidence("La evidencia fotográfica fue descartada.");
   }
 
   const refresh = useCallback(async () => {
@@ -132,6 +215,9 @@ export function InspectionWorkspace() {
       active = false;
       window.removeEventListener("online", online);
       if (retryTimerRef.current !== null) window.clearTimeout(retryTimerRef.current);
+      photoCaptureVersionRef.current += 1;
+      photoCaptureControllerRef.current?.abort();
+      photoCaptureControllerRef.current = null;
       storeRef.current?.close();
     };
   }, [refresh, synchronize]);
@@ -162,6 +248,7 @@ export function InspectionWorkspace() {
         setError(`No se pudo guardar la captura; no se confirmó el cambio. ${cause instanceof Error ? cause.message : "Error de almacenamiento"}. Revise IndexedDB e intente de nuevo.`);
         return;
       }
+      releasePhotoEvidence("La inspección se guardó localmente. La evidencia temporal se liberó; no fue adjuntada ni almacenada.");
       formElement.reset();
       setError(null);
       setMessage(navigator.onLine ? "Captura guardada localmente; sincronizando…" : "Captura guardada sin conexión y marcada como pendiente.");
@@ -188,6 +275,18 @@ export function InspectionWorkspace() {
       <label>Responsable <input name="inspector" required maxLength={120} /></label>
       <label>Hallazgos <input name="findings" type="number" min="0" step="1" required /></label>
       <label>Resumen <textarea name="summary" required maxLength={500} /></label>
+      <section aria-labelledby="photo-evidence-heading">
+        <h4 id="photo-evidence-heading">Evidencia fotográfica opcional</h4>
+        <p className="muted">La fotografía se mantiene únicamente en memoria durante esta sesión; no se adjunta a la inspección, no se guarda y no se sincroniza.</p>
+        <button type="button" onClick={() => void capturePhotoEvidence()} disabled={isCapturing}>
+          Capturar fotografía
+        </button>
+        {isCapturing && <button type="button" onClick={cancelPhotoCapture}>Cancelar captura</button>}
+        {photoEvidence && <button type="button" onClick={discardPhotoEvidence}>Descartar evidencia</button>}
+        {photoPreviewUrl && <img src={photoPreviewUrl} alt="Vista previa de la evidencia fotográfica capturada" />}
+        <p role="status" className="muted">{photoMessage}</p>
+        {photoError && <p role="alert" className="state-error">{photoError}</p>}
+      </section>
       <button type="submit">Guardar captura</button>
       <button type="button" onClick={() => void synchronize()}>Sincronizar pendientes</button>
       <button type="button" onClick={() => void enableNotifications()}>
