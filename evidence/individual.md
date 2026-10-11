@@ -220,7 +220,7 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 
 - **Rama de trabajo:** `feature/week-6-notifications-ui`.
 - **Commit SHA de notificaciones:** `c595a7292a7030ce59cc368bd340504d33808050`.
-- **Commit SHA de integración fotográfica:** PENDIENTE DE COMMIT.
+- **Commit SHA de integración fotográfica:** '88eaf50fa95b026035df6f60e4d00f35b78111d1'.
 - **Contribución concreta:** implementé el cliente de notificaciones locales y su integración en el formulario: permisos tipados, solicitud explícita, aviso al guardar, fallback visible, manejo de errores y prevención de avisos duplicados. También integré la captura fotográfica opcional usando el adaptador de Marco (`capturePhoto`, `CameraCaptureError` y `AbortSignal`): acción explícita, vista previa temporal, descarte y cancelación, estado reactivo `isCapturing`, contador de versión frente a resultados tardíos y limpieza tras el guardado local confirmado.
 - **Decisión técnica que puedo explicar:** los permisos no se solicitan al cargar. La fotografía vive sólo como `Blob` en memoria y su URL de objeto se libera al sustituirla o limpiarla. No se adjunta a la inspección, no se persiste en IndexedDB, no ingresa a la cola y no se sincroniza; el registro conserva su flujo habitual con o sin foto.
 - **Pruebas automatizadas y resultado real:** `npm test`, `npm run build`, `npm run verify` y `git diff --check`: PASS. El primer build de la integración inicial falló por `EPERM` del entorno, pero el reintento terminó correctamente. Las advertencias `MODULE_TYPELESS_PACKAGE_JSON` no afectaron el resultado.

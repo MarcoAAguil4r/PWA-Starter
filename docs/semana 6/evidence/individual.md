@@ -6,7 +6,7 @@
 - **Matrícula:** 3522110617.
 - **Rama:** `feature/week-6-notifications-ui`.
 - **Commit SHA de notificaciones:** `c595a7292a7030ce59cc368bd340504d33808050`.
-- **Commit SHA de integración fotográfica:** PENDIENTE DE COMMIT.
+- **Commit SHA de integración fotográfica:** '88eaf50fa95b026035df6f60e4d00f35b78111d1'.
 - **Responsabilidad individual:** cliente de notificaciones e integración de captura fotográfica opcional en la interfaz de inspecciones.
 - **Implementación de notificaciones:** `src/lib/notifications/client.ts` proporciona permisos tipados, notificaciones locales y fallback. En `src/components/inspection-workspace.tsx`, el permiso se solicita sólo mediante el botón explícito y se muestra un aviso al guardar; si el permiso se deniega o no está disponible, permanece un mensaje alternativo visible. No hay Web Push remoto ni servicios externos.
 - **Implementación fotográfica:** `src/components/inspection-workspace.tsx` consume el adaptador de Marco `capturePhoto(options): Promise<Blob>`, `CameraCaptureError` y cancelación mediante `AbortSignal` de `src/lib/device/camera.ts`. La captura se inicia mediante acción explícita, usa `isCapturing` como estado reactivo, permite cancelar y descartar, presenta una vista previa temporal y usa un contador de versión para descartar resultados tardíos. La URL de objeto se libera al cambiar o limpiar el `Blob`.
