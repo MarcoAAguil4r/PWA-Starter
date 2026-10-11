@@ -16,6 +16,8 @@ Cada carpeta semanal conserva el contrato, la rúbrica y la evidencia de esa ent
 - [Semana 3: service worker y offline](semana%203/README.md)
 - [Semana 4: SSR y CSR](semana%204/README.md)
 - [Semana 5: persistencia y sincronización](semana%205/README.md)
+- [Semana 6: capacidades del dispositivo y notificaciones](semana%206/README.md)
+- [Repartición de trabajo y ramas de Semana 6](semana%206/PLAN-DE-TRABAJO.md)
 
 Los workflows que GitHub ejecuta deben estar directamente en `.github/workflows/` desde la raíz. Las copias bajo `docs/semana N/.github/workflows/` pertenecen al paquete de actividad y no se ejecutan desde esa ubicación.
 
