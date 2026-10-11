@@ -219,7 +219,7 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 ### David Aguilar Rodríguez
 
 - **Rama de trabajo:** `feature/week-6-notifications-ui`.
-- **Commit SHA:** PENDIENTE — registrar SHA después del commit manual.
+- **Commit SHA:**c595a7292a7030ce59cc368bd340504d33808050.
 - **Contribución concreta:** Implementé el cliente local de notificaciones del navegador y su integración mínima en el formulario de inspecciones. El permiso sólo se solicita desde el botón explícito “Habilitar notificaciones”. Al guardar una inspección se muestra una notificación si existe autorización; si no, el estado y el mensaje de fallback permanecen visibles en la aplicación. Las etiquetas por inspección previenen avisos duplicados dentro de la sesión.
 - **Privacidad y límites:** No se solicita permiso al cargar, renderizar o importar el módulo. No se usan servicios externos, push remoto, secretos ni datos reales. La función no altera persistencia, cola ni sincronización. La integración de fotografía queda PENDIENTE: `src/lib/device/camera.ts` no existe en esta rama y no se creó un sustituto ni se almacenan imágenes o coordenadas.
 - **Archivos modificados:** `src/lib/notifications/client.ts` y `src/components/inspection-workspace.tsx`, además de esta evidencia y la evidencia específica de Semana 6.

@@ -3,7 +3,7 @@
 ## David Aguilar Rodríguez
 
 - **Rama:** `feature/week-6-notifications-ui`.
-- **Commit SHA:** PENDIENTE — registrar SHA después del commit manual.
+- **Commit SHA:**c595a7292a7030ce59cc368bd340504d33808050.
 - **Responsabilidad:** cliente de notificaciones e integración de interfaz.
 - **Implementado:** `src/lib/notifications/client.ts` expone estado, solicitud explícita de permiso y emisión local tipada con fallback. `src/components/inspection-workspace.tsx` incorpora el control explícito para habilitar avisos, comunica el estado al usuario y muestra un aviso local cuando se guarda una inspección. Las etiquetas de notificación se deduplican por inspección durante la sesión.
 - **Permisos y privacidad:** no se invoca `Notification.requestPermission()` durante importación, renderizado ni carga. No hay Web Push, secretos, servicios externos, imágenes persistidas ni coordenadas.
