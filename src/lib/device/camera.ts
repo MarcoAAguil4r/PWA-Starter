@@ -24,7 +24,6 @@ export class CameraCaptureError extends Error {
 
 export type CameraCaptureOptions = {
   facingMode?: "user" | "environment";
-  imageType?: "image/jpeg" | "image/png";
   quality?: number;
   maxDimension?: number;
   signal?: AbortSignal;
@@ -51,6 +50,63 @@ function mapCameraError(error: unknown): CameraCaptureError {
     default:
       return new CameraCaptureError("capture-failed", "No se pudo capturar la evidencia con la cámara.", error);
   }
+}
+
+function stopStream(stream: MediaStream): void {
+  stream.getTracks().forEach((track) => track.stop());
+}
+
+function waitForCameraStream(request: Promise<MediaStream>, signal: AbortSignal): Promise<MediaStream> {
+  return new Promise((resolve, reject) => {
+    let settled = false;
+    const cleanup = () => signal.removeEventListener("abort", onAbort);
+    const onAbort = () => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(new CameraCaptureError("aborted", "La captura de cámara fue interrumpida."));
+    };
+
+    signal.addEventListener("abort", onAbort, { once: true });
+    request.then((stream) => {
+      if (settled || signal.aborted) {
+        stopStream(stream);
+        onAbort();
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolve(stream);
+    }, (error: unknown) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(mapCameraError(error));
+    });
+    if (signal.aborted) onAbort();
+  });
+}
+
+function waitWithAbort<T>(operation: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const cleanup = () => signal.removeEventListener("abort", onAbort);
+    const onAbort = () => {
+      cleanup();
+      reject(new CameraCaptureError("aborted", "La captura de cámara fue interrumpida."));
+    };
+
+    signal.addEventListener("abort", onAbort, { once: true });
+    operation.then((value) => {
+      cleanup();
+      if (signal.aborted) onAbort();
+      else resolve(value);
+    }, (error: unknown) => {
+      cleanup();
+      if (signal.aborted) onAbort();
+      else reject(error);
+    });
+    if (signal.aborted) onAbort();
+  });
 }
 
 function waitForVideoMetadata(video: HTMLVideoElement, signal?: AbortSignal): Promise<void> {
@@ -86,7 +142,7 @@ function waitForVideoMetadata(video: HTMLVideoElement, signal?: AbortSignal): Pr
   });
 }
 
-function validateOptions(options: CameraCaptureOptions): Required<Pick<CameraCaptureOptions, "facingMode" | "imageType" | "quality" | "maxDimension">> {
+function validateOptions(options: CameraCaptureOptions): Required<Pick<CameraCaptureOptions, "facingMode" | "quality" | "maxDimension">> {
   const quality = options.quality ?? 0.85;
   const maxDimension = options.maxDimension ?? 1280;
   if (!Number.isFinite(quality) || quality <= 0 || quality > 1) {
@@ -97,7 +153,6 @@ function validateOptions(options: CameraCaptureOptions): Required<Pick<CameraCap
   }
   return {
     facingMode: options.facingMode ?? "environment",
-    imageType: options.imageType ?? "image/jpeg",
     quality,
     maxDimension
   };
@@ -108,7 +163,7 @@ function validateOptions(options: CameraCaptureOptions): Required<Pick<CameraCap
  * The returned Blob stays in memory; this helper does not persist or upload it.
  */
 export async function capturePhoto(options: CameraCaptureOptions = {}): Promise<Blob> {
-  const { facingMode, imageType, quality, maxDimension } = validateOptions(options);
+  const { facingMode, quality, maxDimension } = validateOptions(options);
   if (options.signal?.aborted) {
     throw new CameraCaptureError("aborted", "La captura de cámara fue interrumpida.");
   }
@@ -119,31 +174,28 @@ export async function capturePhoto(options: CameraCaptureOptions = {}): Promise<
     throw new CameraCaptureError("unsupported", "La cámara solo está disponible en el navegador.");
   }
 
-  let stream: MediaStream;
-  try {
-    stream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: { facingMode: { ideal: facingMode } }
-    });
-  } catch (error) {
-    throw mapCameraError(error);
-  }
-
+  let stream: MediaStream | null = null;
   let video: HTMLVideoElement | null = null;
   const captureController = new AbortController();
   const abortCapture = () => captureController.abort();
   options.signal?.addEventListener("abort", abortCapture, { once: true });
 
   try {
-    if (options.signal?.aborted) {
-      captureController.abort();
-      throw new CameraCaptureError("aborted", "La captura de cámara fue interrumpida.");
-    }
+    stream = await waitForCameraStream(
+      navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: { facingMode: { ideal: facingMode } }
+      }),
+      captureController.signal
+    );
     video = document.createElement("video");
     video.muted = true;
     video.playsInline = true;
     video.srcObject = stream;
-    await Promise.all([video.play(), waitForVideoMetadata(video, captureController.signal)]);
+    await Promise.all([
+      waitWithAbort(video.play(), captureController.signal),
+      waitForVideoMetadata(video, captureController.signal)
+    ]);
     if (options.signal?.aborted) {
       throw new CameraCaptureError("aborted", "La captura de cámara fue interrumpida.");
     }
@@ -161,16 +213,13 @@ export async function capturePhoto(options: CameraCaptureOptions = {}): Promise<
     }
     context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-    const image = await new Promise<Blob>((resolve, reject) => {
+    const encoding = new Promise<Blob>((resolve, reject) => {
       canvas.toBlob((blob) => {
         if (blob) resolve(blob);
         else reject(new CameraCaptureError("capture-failed", "El navegador no pudo codificar la imagen."));
-      }, imageType, quality);
+      }, "image/jpeg", quality);
     });
-    if (options.signal?.aborted) {
-      throw new CameraCaptureError("aborted", "La captura de cámara fue interrumpida.");
-    }
-    return image;
+    return await waitWithAbort(encoding, captureController.signal);
   } catch (error) {
     if (error instanceof CameraCaptureError) throw error;
     throw mapCameraError(error);
@@ -181,6 +230,6 @@ export async function capturePhoto(options: CameraCaptureOptions = {}): Promise<
       video.pause();
       video.srcObject = null;
     }
-    stream.getTracks().forEach((track) => track.stop());
+    if (stream) stopStream(stream);
   }
 }
