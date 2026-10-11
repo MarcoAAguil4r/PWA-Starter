@@ -213,3 +213,19 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Limitación o bloqueo diagnosticado:** El transporte sintético no sincroniza entre dispositivos y no existe una interfaz para resolver manualmente un conflicto. Los avisos `MODULE_TYPELESS_PACKAGE_JSON` de Node en specs TypeScript no afectan las pruebas ni el build; no se modificó `package.json` sólo para ocultarlos.
 - **Cambio que puedo defender o modificar en vivo:** La persistencia IndexedDB y el flujo `online → processPendingOperations`, incluida la protección de concurrencia y la conservación de conflictos.
 - **Uso declarado de IA:** Utilicé Codex para auditar el repositorio, integrar los contratos existentes, redactar documentación y revisar el diff. Revisé los cambios y registré las verificaciones bloqueadas tal como ocurrieron.
+
+## Semana 6
+
+### David Aguilar Rodríguez
+
+- **Rama de trabajo:** `feature/week-6-notifications-ui`.
+- **Commit SHA de notificaciones:** `c595a7292a7030ce59cc368bd340504d33808050`.
+- **Commit SHA de integración fotográfica:** '88eaf50fa95b026035df6f60e4d00f35b78111d1'.
+- **Contribución concreta:** implementé el cliente de notificaciones locales y su integración en el formulario: permisos tipados, solicitud explícita, aviso al guardar, fallback visible, manejo de errores y prevención de avisos duplicados. También integré la captura fotográfica opcional usando el adaptador de Marco (`capturePhoto`, `CameraCaptureError` y `AbortSignal`): acción explícita, vista previa temporal, descarte y cancelación, estado reactivo `isCapturing`, contador de versión frente a resultados tardíos y limpieza tras el guardado local confirmado.
+- **Decisión técnica que puedo explicar:** los permisos no se solicitan al cargar. La fotografía vive sólo como `Blob` en memoria y su URL de objeto se libera al sustituirla o limpiarla. No se adjunta a la inspección, no se persiste en IndexedDB, no ingresa a la cola y no se sincroniza; el registro conserva su flujo habitual con o sin foto.
+- **Pruebas automatizadas y resultado real:** `npm test`, `npm run build`, `npm run verify` y `git diff --check`: PASS. El primer build de la integración inicial falló por `EPERM` del entorno, pero el reintento terminó correctamente. Las advertencias `MODULE_TYPELESS_PACKAGE_JSON` no afectaron el resultado.
+- **Pruebas manuales en Brave:** PASS para permiso explícito y captura, vista previa, descarte, limpieza tras guardar, permiso de cámara denegado y fallback, guardado sin foto con cámara bloqueada, guardado offline `pending` y posterior sincronización `synced` con el transporte sintético, cancelación de captura, notificación autorizada y fallback de notificaciones denegadas.
+- **Limitaciones pendientes:** falta simular ausencia de API de cámara, desmontar o navegar durante una captura, comprobar adicionalmente que no se muestra foto tardía tras cerrar permisos y validar ausencia de API de notificaciones y deduplicación. La sincronización usada es sintética, no un backend de producción.
+- **Incidencia independiente:** el conflicto previo de rutas de `/manifest.webmanifest` provoca HTTP 500 en desarrollo y ya está registrado en GitHub Issues; no se atribuye a cámara ni notificaciones.
+- **Cambio que puedo defender o modificar en vivo:** permisos y fallback de notificaciones; captura temporal cancelable, liberación posterior al guardado y protección contra resultados tardíos.
+- **Uso de IA:** utilicé Codex para implementar y revisar los cambios, actualizar la evidencia y ejecutar verificaciones; revisé manualmente el diff, los resultados y las pruebas en Brave.
