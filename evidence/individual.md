@@ -213,3 +213,14 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Limitación o bloqueo diagnosticado:** El transporte sintético no sincroniza entre dispositivos y no existe una interfaz para resolver manualmente un conflicto. Los avisos `MODULE_TYPELESS_PACKAGE_JSON` de Node en specs TypeScript no afectan las pruebas ni el build; no se modificó `package.json` sólo para ocultarlos.
 - **Cambio que puedo defender o modificar en vivo:** La persistencia IndexedDB y el flujo `online → processPendingOperations`, incluida la protección de concurrencia y la conservación de conflictos.
 - **Uso declarado de IA:** Utilicé Codex para auditar el repositorio, integrar los contratos existentes, redactar documentación y revisar el diff. Revisé los cambios y registré las verificaciones bloqueadas tal como ocurrieron.
+
+## Semana 6
+
+### David Aguilar Rodríguez
+
+- **Rama de trabajo:** `feature/week-6-notifications-ui`.
+- **Commit SHA:** PENDIENTE — registrar SHA después del commit manual.
+- **Contribución concreta:** Implementé el cliente local de notificaciones del navegador y su integración mínima en el formulario de inspecciones. El permiso sólo se solicita desde el botón explícito “Habilitar notificaciones”. Al guardar una inspección se muestra una notificación si existe autorización; si no, el estado y el mensaje de fallback permanecen visibles en la aplicación. Las etiquetas por inspección previenen avisos duplicados dentro de la sesión.
+- **Privacidad y límites:** No se solicita permiso al cargar, renderizar o importar el módulo. No se usan servicios externos, push remoto, secretos ni datos reales. La función no altera persistencia, cola ni sincronización. La integración de fotografía queda PENDIENTE: `src/lib/device/camera.ts` no existe en esta rama y no se creó un sustituto ni se almacenan imágenes o coordenadas.
+- **Archivos modificados:** `src/lib/notifications/client.ts` y `src/components/inspection-workspace.tsx`, además de esta evidencia y la evidencia específica de Semana 6.
+- **Verificaciones reales:** `npm test` y `npm run verify` terminaron en FAIL porque falta el paquete ya declarado `fake-indexeddb` en `node_modules`, al llegar a `tests/sync.spec.ts`; no se instalaron dependencias por alcance. `npm run build` terminó en FAIL por `EPERM` al crear `.next/static/chunks`. `git diff --check` terminó correctamente. PENDIENTE DE VERIFICACIÓN MANUAL: permisos granted/denied/default, API ausente, fallback visible y ausencia de avisos duplicados en navegador.

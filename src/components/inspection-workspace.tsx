@@ -8,6 +8,7 @@ import type { InspectionConflict, StoredInspection } from "../lib/storage/schema
 import { processPendingOperations, retryDelayMs } from "../lib/sync/queue";
 import { resolveInspectionConflict } from "../lib/sync/conflict-policy";
 import { createSyntheticTransport } from "../lib/sync/synthetic-transport";
+import { getNotificationPermission, requestNotificationPermission, showLocalNotification, type NotificationCapabilityStatus } from "../lib/notifications/client";
 
 const isoNow = () => new Date().toISOString();
 
@@ -21,18 +22,50 @@ export function InspectionWorkspace() {
   const syncingRef = useRef(false);
   const syncRequestedRef = useRef(false);
   const captureInProgressRef = useRef(false);
+  const lastNotifiedCaptureKeyRef = useRef<string | null>(null);
   const retryTimerRef = useRef<number | null>(null);
   const [records, setRecords] = useState<StoredInspection[]>([]);
   const [conflicts, setConflicts] = useState<InspectionConflict[]>([]);
   const [message, setMessage] = useState("Cargando registros locales…");
   const [error, setError] = useState<string | null>(null);
+  const [notificationPermission, setNotificationPermission] = useState<NotificationCapabilityStatus>("checking");
+  const [notificationMessage, setNotificationMessage] = useState("Comprobando la disponibilidad de notificaciones…");
   const capturedRecords = records.filter((record) => !seedInspections.some((seed) => seed.id === record.id));
+
+  async function enableNotifications() {
+    const result = await requestNotificationPermission();
+    setNotificationPermission(result.permission);
+    setNotificationMessage(result.message);
+  }
+
+  function notifyCapture(inspection: Inspection, captureKey: string) {
+    if (lastNotifiedCaptureKeyRef.current === captureKey) return;
+    lastNotifiedCaptureKeyRef.current = captureKey;
+    try {
+      const result = showLocalNotification("Inspección guardada", {
+        body: `La inspección de ${inspection.location} quedó guardada localmente.`,
+        tag: `inspection-saved-${captureKey}`
+      });
+      setNotificationPermission(result.permission);
+      setNotificationMessage(result.message);
+    } catch {
+      setNotificationMessage("No se pudo mostrar la notificación; la inspección continúa guardada localmente.");
+    }
+  }
 
   const refresh = useCallback(async () => {
     const store = storeRef.current;
     if (!store) return;
     setRecords(await store.listInspections());
     setConflicts(await store.listConflicts());
+  }, []);
+
+  useEffect(() => {
+    const permission = getNotificationPermission();
+    setNotificationPermission(permission);
+    setNotificationMessage(permission === "granted"
+      ? "Las notificaciones están habilitadas."
+      : "Los avisos de cambios se muestran aquí mientras las notificaciones del navegador no estén habilitadas.");
   }, []);
 
   const synchronize = useCallback(async () => {
@@ -132,6 +165,7 @@ export function InspectionWorkspace() {
       formElement.reset();
       setError(null);
       setMessage(navigator.onLine ? "Captura guardada localmente; sincronizando…" : "Captura guardada sin conexión y marcada como pendiente.");
+      notifyCapture(inspection, key);
       try {
         await refresh();
       } catch (cause) {
@@ -156,8 +190,12 @@ export function InspectionWorkspace() {
       <label>Resumen <textarea name="summary" required maxLength={500} /></label>
       <button type="submit">Guardar captura</button>
       <button type="button" onClick={() => void synchronize()}>Sincronizar pendientes</button>
+      <button type="button" onClick={() => void enableNotifications()}>
+        {notificationPermission === "granted" ? "Notificaciones habilitadas" : "Habilitar notificaciones"}
+      </button>
     </form>
     <p role="status" className="sync-message">{message}</p>
+    <p role="status" className="muted">Notificaciones: {notificationPermission === "checking" ? "comprobando disponibilidad" : notificationPermission}. {notificationMessage}</p>
     {error && <div role="alert" className="state-error"><p>{error}</p><button type="button" onClick={() => { setError(null); void synchronize(); }}>Reintentar</button></div>}
     {capturedRecords.length > 0 && <section aria-labelledby="local-captures-heading">
       <h3 id="local-captures-heading">Capturas locales</h3>
