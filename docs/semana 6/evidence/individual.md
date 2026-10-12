@@ -21,8 +21,8 @@
 ### Dulce Acevedo Miguel — Integrante 3
 
 - **Matrícula:** 3523110484.
-- **Rama:** `feat/week6-dulce-tests-docs`
-- **Commit SHA evaluado:** *(se completa tras el commit)*
+- **Rama:** `feat/week6-dulce-tests-docs`.
+- **Commit SHA evaluado:** `8abf223d07ade99e647bfe600f02de3be3ba9d60`.
 - **Contribución concreta:** `tests/capabilities.spec.ts`, `docs/capabilities.md`, integración del spec en `npm test` y en `scripts/verify.mjs`, actualización de README y evidencia individual.
 - **Decisión técnica que puedo explicar:** pruebas deterministas con mocks de `navigator`/`document`/`Notification` para no depender de hardware ni permisos reales en CI; la UI permanece usable sin cámara ni notificaciones; la foto no se persiste.
 - **Prueba ejecutada y resultado:** `node tests/capabilities.spec.ts` → PASS; `npm test` → PASS; `npm run build` → PASS; `npm run verify` → Verificación técnica: pass (checks públicos Semana 5 y 6: PUBLIC_OK).
