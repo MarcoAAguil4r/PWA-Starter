@@ -5,6 +5,7 @@ import { spawnSync } from "node:child_process";
 const root = resolve(import.meta.dirname, "..");
 const required = ["package.json", "package-lock.json", "README.md", "src/app/layout.tsx", "src/app/page.tsx", "src/app/globals.css", "src/lib/data/inspections.ts", "docs/requirements.md", "docs/decision-record.md", "tests/starter.spec.mjs", "evidence/individual.md", "src/components/app-shell.tsx", "src/app/manifest.ts", "public/icons/icon-192x192.png", "public/icons/icon-512x512.png", "tests/manifest.spec.mjs", "public/sw.js", "src/lib/pwa/register-service-worker.ts", "src/components/service-worker-registration.tsx", "docs/cache-strategy.md", "tests/service-worker.spec.ts", "tests/offline.spec.ts", "src/app/inspecciones/page.tsx", "src/app/inspecciones/[id]/page.tsx", "src/app/inspecciones/error.tsx", "src/app/inspecciones/[id]/error.tsx", "src/components/loading-state.tsx", "docs/rendering-decision.md", "tests/rendering.spec.ts", "scripts/measure-rendering.mjs", "docs/semana 4/evidence/individual.md", "src/lib/storage/schema.ts", "src/lib/storage/inspection-store.ts", "src/lib/sync/queue.ts", "src/lib/sync/conflict-policy.ts", "docs/sync-policy.md", "tests/sync.spec.ts", "docs/semana 5/public-tests/check.sh", ".github/workflows/week-05-w05-sync-data.yml"];
 required.push("src/lib/sync/synthetic-server.ts", "src/lib/sync/synthetic-transport.ts", "src/app/api/inspections/sync/route.ts", "src/components/inspection-workspace.tsx", "scripts/check-secrets.mjs", "docs/sync-policy.md", "docs/semana 5/evidence/individual.md");
+required.push("src/lib/device/camera.ts", "src/lib/device/geolocation.ts", "src/lib/notifications/client.ts", "docs/capabilities.md", "tests/capabilities.spec.ts", "docs/semana 6/public-tests/check.sh", ".github/workflows/week-06-w06-device-push.yml", "docs/semana 6/evidence/individual.md");
 const missing = required.filter(file => !existsSync(resolve(root, file)));
 const structureOnly = process.argv.includes("--structure");
 if (structureOnly) {
@@ -51,6 +52,28 @@ if (!bash) {
   if (publicCheck.stderr) process.stderr.write(publicCheck.stderr);
   checks.push({ id: "week-05-public-check", status: publicCheck.status === 0 && !publicCheck.error ? "pass" : "fail", exitCode: publicCheck.status, error: publicCheck.error?.message ?? null });
 }
+console.log("\nVerificando contrato público de Semana 6...");
+if (!bash) {
+  const error = process.env.PWA_BASH_PATH
+    ? `PWA_BASH_PATH no apunta a un ejecutable existente: ${process.env.PWA_BASH_PATH}`
+    : "No se encontró Bash. Instale Git Bash, configure PWA_BASH_PATH con su ejecutable o ejecute la verificación en un sistema con Bash.";
+  console.error(error);
+  checks.push({ id: "week-06-public-check", status: "fail", exitCode: null, error });
+} else {
+  const publicCheckW06 = spawnSync(bash, ["docs/semana 6/public-tests/check.sh"], {
+    cwd: root,
+    encoding: "utf8",
+    maxBuffer: 20 * 1024 * 1024
+  });
+  if (publicCheckW06.stdout) process.stdout.write(publicCheckW06.stdout);
+  if (publicCheckW06.stderr) process.stderr.write(publicCheckW06.stderr);
+  checks.push({
+    id: "week-06-public-check",
+    status: publicCheckW06.status === 0 && !publicCheckW06.error ? "pass" : "fail",
+    exitCode: publicCheckW06.status,
+    error: publicCheckW06.error?.message ?? null
+  });
+}
 if (checks.find(check => check.id === "build")?.status === "pass") {
   console.log("\nMidiendo respuestas SSR y CSR...");
   const run = spawnSync(npm, ["run", "measure:rendering"], { cwd: root, encoding: "utf8", shell: process.platform === "win32", maxBuffer: 20 * 1024 * 1024 });
@@ -64,7 +87,7 @@ const git = args => {
   const r = spawnSync("git", args, { cwd: root, encoding: "utf8" });
   return r.status === 0 ? r.stdout.trim() : null;
 };
-const documents = ["docs/requirements.md", "docs/decision-record.md", "docs/rendering-decision.md", "docs/sync-policy.md", "evidence/individual.md", "docs/semana 4/evidence/individual.md", "docs/semana 5/evidence/individual.md", "README.md"].map(file => ({ file, content: existsSync(resolve(root, file)) ? readFileSync(resolve(root, file), "utf8") : null }));
+const documents = ["docs/requirements.md", "docs/decision-record.md", "docs/rendering-decision.md", "docs/sync-policy.md", "docs/capabilities.md", "evidence/individual.md", "docs/semana 4/evidence/individual.md", "docs/semana 5/evidence/individual.md", "docs/semana 6/evidence/individual.md", "README.md"];
 const gitStatus = git(["status", "--porcelain"]);
 const result = {
   schemaVersion: 2,
