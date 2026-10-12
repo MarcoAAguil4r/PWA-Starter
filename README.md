@@ -113,4 +113,13 @@ bash "docs/semana 5/public-tests/check.sh"
 
 ### Semana 6: capacidades del dispositivo y notificaciones
 
-La actividad solicita agregar evidencia opcional mediante cámara, geolocalización con permisos mínimos y notificaciones con fallback. El mapa de entregables, los responsables y las ramas independientes están en [el plan de trabajo de Semana 6](docs/semana%206/PLAN-DE-TRABAJO.md). Los adaptadores se ubican bajo `src/lib/device/`, el cliente de notificaciones bajo `src/lib/notifications/`, la documentación en `docs/capabilities.md` y las pruebas en `tests/capabilities.spec.ts`. El workflow ejecutable se guarda en `.github/workflows/`; el material de la actividad permanece bajo `docs/semana 6/`.
+Se añaden adaptadores de cámara (`capturePhoto` → Blob JPEG, pistas detenidas, sin persistencia), geolocalización (`getCurrentCoordinates` → solo lat/lon/accuracy) y un cliente de **notificaciones locales** con permiso solo por acción del usuario y fallback en UI. La evidencia fotográfica en el formulario es opcional, temporal y no entra a IndexedDB ni a la cola de sincronización.
+
+Decisiones, permisos, fallback y límites: [docs/capabilities.md](docs/capabilities.md).
+
+```bash
+npm ci
+npm test          # incluye tests/capabilities.spec.ts
+npm run build
+npm run verify
+bash "docs/semana 6/public-tests/check.sh"

@@ -229,3 +229,14 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Incidencia independiente:** el conflicto previo de rutas de `/manifest.webmanifest` provoca HTTP 500 en desarrollo y ya está registrado en GitHub Issues; no se atribuye a cámara ni notificaciones.
 - **Cambio que puedo defender o modificar en vivo:** permisos y fallback de notificaciones; captura temporal cancelable, liberación posterior al guardado y protección contra resultados tardíos.
 - **Uso de IA:** utilicé Codex para implementar y revisar los cambios, actualizar la evidencia y ejecutar verificaciones; revisé manualmente el diff, los resultados y las pruebas en Brave.
+
+### Dulce Acevedo Miguel
+
+- **Rama:** `feat/week6-dulce-tests-docs`
+- **Commit SHA evaluado:** *(se completa tras el commit)*
+- **Contribución concreta:** `tests/capabilities.spec.ts`, `docs/capabilities.md`, integración del spec en `npm test` y en `scripts/verify.mjs`, actualización de README y evidencia individual.
+- **Decisión técnica que puedo explicar:** pruebas deterministas con mocks de `navigator`/`document`/`Notification` para no depender de hardware ni permisos reales en CI; la UI permanece usable sin cámara ni notificaciones; la foto no se persiste.
+- **Prueba ejecutada y resultado:** `node tests/capabilities.spec.ts` → PASS; `npm test` → PASS; `npm run build` → PASS; `npm run verify` → Verificación técnica: pass (checks públicos Semana 5 y 6: PUBLIC_OK).
+- **Limitación o fallo diagnosticado:** las pruebas no sustituyen una validación E2E de diálogos de permiso en cada navegador; la notificación es local, no Web Push.
+- **Cambio que puedo defender o modificar en vivo:** casos de error tipados (`code`), fallback de notificaciones y contrato de no persistencia de la fotografía.
+- **Uso declarado de IA:** utilicé Claude para revisar el PR integrado, alinear contratos y redactar tests/docs; validación humana de comandos (`npm test`, `npm run build`, `npm run verify`) y del diff antes del commit.

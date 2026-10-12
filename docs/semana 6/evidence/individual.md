@@ -18,6 +18,18 @@
 - **Uso de IA:** utilicé Codex para implementar y revisar la integración, actualizar la evidencia y ejecutar verificaciones; validé manualmente los cambios, los resultados locales y las pruebas en Brave.
 - **Cambio que puedo defender:** permisos y fallback de notificaciones; captura temporal cancelable, limpieza posterior al guardado y protección frente a resultados tardíos de cámara.
 
+### Dulce Acevedo Miguel — Integrante 3
+
+- **Matrícula:** 3523110484.
+- **Rama:** `feat/week6-dulce-tests-docs`
+- **Commit SHA evaluado:** *(se completa tras el commit)*
+- **Contribución concreta:** `tests/capabilities.spec.ts`, `docs/capabilities.md`, integración del spec en `npm test` y en `scripts/verify.mjs`, actualización de README y evidencia individual.
+- **Decisión técnica que puedo explicar:** pruebas deterministas con mocks de `navigator`/`document`/`Notification` para no depender de hardware ni permisos reales en CI; la UI permanece usable sin cámara ni notificaciones; la foto no se persiste.
+- **Prueba ejecutada y resultado:** `node tests/capabilities.spec.ts` → PASS; `npm test` → PASS; `npm run build` → PASS; `npm run verify` → Verificación técnica: pass (checks públicos Semana 5 y 6: PUBLIC_OK).
+- **Limitación o fallo diagnosticado:** las pruebas no sustituyen una validación E2E de diálogos de permiso en cada navegador; la notificación es local, no Web Push.
+- **Cambio que puedo defender o modificar en vivo:** casos de error tipados (`code`), fallback de notificaciones y contrato de no persistencia de la fotografía.
+- **Uso declarado de IA:** Grok para revisar el PR integrado, alinear contratos y redactar tests/docs; validación humana de comandos (`npm test`, `npm run build`, `npm run verify`) y del diff antes del commit.
+
 ## Plantilla para evidencia de otros integrantes
 
 - **Estudiante:**
