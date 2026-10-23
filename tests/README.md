@@ -26,3 +26,12 @@ node tests/sync.spec.ts
 
 El endpoint se prueba además desde la UI en navegador. El servidor de prueba conserva su estado solo en memoria y no reemplaza un backend persistente de producción.
 
+## Semana 8
+
+`tests/unit/capture-validation.spec.ts` comprueba la validación compartida por el formulario: normalización de texto, campos requeridos, límites de longitud y hallazgos enteros seguros no negativos. Se ejecuta como parte de `npm test` o directamente:
+
+```bash
+node tests/unit/capture-validation.spec.ts
+```
+
+La prueba no sustituye los escenarios de persistencia offline, reconexión, sincronización ni permisos del dispositivo, que requieren pruebas de integración y E2E.

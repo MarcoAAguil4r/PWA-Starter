@@ -2,6 +2,7 @@
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { inspections as seedInspections, type Inspection } from "../lib/data/inspections";
+import { validateCaptureFields } from "../lib/data/capture-validation";
 import { InspectionList } from "./inspection-list";
 import { createStoredInspection, IndexedDbInspectionStore, openInspectionDatabase } from "../lib/storage/inspection-store";
 import type { InspectionConflict, StoredInspection } from "../lib/storage/schema";
@@ -110,14 +111,21 @@ export function InspectionWorkspace() {
     const formElement = event.currentTarget;
     try {
       const form = new FormData(formElement);
-      const location = String(form.get("location") ?? "").trim();
-      const inspector = String(form.get("inspector") ?? "").trim();
-      const summary = String(form.get("summary") ?? "").trim();
-      const findings = Number(form.get("findings"));
-      if (!location || !inspector || !summary || !Number.isSafeInteger(findings) || findings < 0) {
+      const validation = validateCaptureFields({
+        location: form.get("location"),
+        inspector: form.get("inspector"),
+        summary: form.get("summary"),
+        findings: form.get("findings")
+      });
+      if (!validation.valid) {
+        if (validation.reason === "length") {
+          setError("Ubicación y responsable deben tener máximo 120 caracteres; el resumen, máximo 500.");
+          return;
+        }
         setError("Complete ubicación, responsable y resumen; los hallazgos deben ser un entero igual o mayor que cero.");
         return;
       }
+      const { location, inspector, summary, findings } = validation.value;
       const store = storeRef.current;
       if (!store) { setError("El almacenamiento local aún no está listo."); return; }
       const inspection: Inspection = { id: `inspection-${makeKey()}`, location, inspector, summary, findings, date: new Date().toISOString().slice(0, 10), status: findings ? "attention" : "ok", statusLabel: findings ? "Requiere atención" : "Sin incidencias" };

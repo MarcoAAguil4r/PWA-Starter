@@ -114,3 +114,17 @@ bash "docs/semana 5/public-tests/check.sh"
 ### Semana 6: capacidades del dispositivo y notificaciones
 
 La actividad solicita agregar evidencia opcional mediante cámara, geolocalización con permisos mínimos y notificaciones con fallback. El mapa de entregables, los responsables y las ramas independientes están en [el plan de trabajo de Semana 6](docs/semana%206/PLAN-DE-TRABAJO.md). Los adaptadores se ubican bajo `src/lib/device/`, el cliente de notificaciones bajo `src/lib/notifications/`, la documentación en `docs/capabilities.md` y las pruebas en `tests/capabilities.spec.ts`. El workflow ejecutable se guarda en `.github/workflows/`; el material de la actividad permanece bajo `docs/semana 6/`.
+
+### Semana 8: estrategia y validación de captura
+
+La estrategia relaciona captura inválida, persistencia/reconexión, duplicado de sincronización y permisos del dispositivo con sus capas de prueba en [docs/test-strategy.md](docs/test-strategy.md). La regla de captura se comparte entre el formulario y `src/lib/data/capture-validation.ts`; su prueba unitaria se ejecuta con el resto de `npm test` o de forma aislada:
+
+```bash
+node tests/unit/capture-validation.spec.ts
+npm test
+npm run build
+```
+
+La validación normaliza los campos de texto, exige ubicación, responsable y resumen no vacíos, respeta sus límites de longitud y acepta únicamente hallazgos enteros seguros no negativos. La prueba no pretende demostrar persistencia, sincronización ni permisos; esos comportamientos requieren sus pruebas de integración y E2E.
+
+En el diagnóstico inicial (Node.js v22.22.0, npm 10.9.4), las pruebas existentes pasaron y `/inspecciones` cargó los registros locales y el formulario. Se detectó y corrigió un HTTP 500 en `/manifest.webmanifest`: Next.js no permite que `public/manifest.webmanifest` y `src/app/manifest.ts` sirvan simultáneamente la misma ruta. Se conserva la ruta del App Router como fuente única, se elimina el espejo público y se verifica el objeto de manifest generado. `public/icons/` conserva los iconos. Después de la corrección, el manifest respondió HTTP 200 y `npm run verify` terminó con `Verificación técnica: pass`. La matriz, el alcance y las limitaciones de esta semana están en [docs/test-strategy.md](docs/test-strategy.md).
