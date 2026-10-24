@@ -23,7 +23,36 @@ assert.deepEqual(
   { valid: false, reason: "required" }
 );
 assert.deepEqual(
+  validateCaptureFields({ ...validCapture, inspector: "   " }),
+  { valid: false, reason: "required" }
+);
+assert.deepEqual(
+  validateCaptureFields({ ...validCapture, summary: "   " }),
+  { valid: false, reason: "required" }
+);
+assert.deepEqual(
+  validateCaptureFields({
+    ...validCapture,
+    location: "L".repeat(120),
+    inspector: "I".repeat(120),
+    summary: "S".repeat(500)
+  }),
+  {
+    valid: true,
+    value: {
+      location: "L".repeat(120),
+      inspector: "I".repeat(120),
+      summary: "S".repeat(500),
+      findings: 2
+    }
+  }
+);
+assert.deepEqual(
   validateCaptureFields({ ...validCapture, findings: "-1" }),
+  { valid: false, reason: "findings" }
+);
+assert.deepEqual(
+  validateCaptureFields({ ...validCapture, findings: "abc" }),
   { valid: false, reason: "findings" }
 );
 assert.deepEqual(

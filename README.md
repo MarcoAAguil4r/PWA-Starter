@@ -4,24 +4,32 @@ Comiencen por `START_HERE.md` y lean `ACTIVIDAD-01.md`. Este es un proyecto acum
 
 ## Entorno
 
-Node.js 22.18 o posterior, npm 10 o posterior, Git y cuenta de GitHub. Node 22.18+ ejecuta los specs TypeScript sin agregar un runner. No se requiere Make. Registren aquí las versiones usadas (`node --version`, `npm --version`) y cualquier dificultad de entorno que encuentren.
+Node.js 22.18 o posterior, npm 10 o posterior, Git y cuenta de GitHub. Node 22.18+ ejecuta los specs TypeScript sin agregar un runner. No se requiere Make. Comprueba el entorno con `node --version` y `npm --version`.
 
-## Ejecución
+## Instalación, arranque y comprobación
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Abran `http://localhost:3000` y comprueben las tres inspecciones sintéticas. Detengan el servidor con Ctrl+C.
+Abre `http://localhost:3000` y detén el servidor con Ctrl+C. Para comprobar pruebas, tipos y build:
+
+```bash
+npm test
+npm run build
+npm run verify
+```
 
 ## Verificación
 
 ```bash
+npm test
+npm run build
 npm run verify
 ```
 
-Ejecuta la comprobación de estructura, `npm test`, el build de producción y la medición HTTP repetible de las rutas SSR/CSR; genera `reports/verification.json` y `reports/rendering-metrics.json`. El reporte contiene resultados técnicos y documentos para revisión, no una calificación automática. `make verify` es equivalente. Para repetir únicamente la medición después de un build, ejecuta `npm run measure:rendering`.
+`npm test` ejecuta las pruebas automatizadas; `npm run build` compila la aplicación para producción y comprueba tipos. `npm run verify` ejecuta la comprobación de estructura, las pruebas, el build y la medición HTTP repetible de las rutas SSR/CSR; genera `reports/verification.json` y `reports/rendering-metrics.json`. El reporte contiene resultados técnicos y documentos para revisión, no una calificación automática. `make verify` es equivalente. Para repetir únicamente la medición después de un build, ejecuta `npm run measure:rendering`.
 
 El workflow de Semana 3 (`.github/workflows/week-03-w03-service-worker-offline.yml`) instala dependencias, compila, comprueba que existan los artefactos requeridos, ejecuta `npm test` y corre el check público. Su artefacto se llama `academic-evidence-w03-service-worker-offline`. El reporte local se excluye de Git: adjúntenlo en Classroom o descarguen el del SHA entregado desde Actions.
 
@@ -113,7 +121,7 @@ bash "docs/semana 5/public-tests/check.sh"
 
 ### Semana 6: capacidades del dispositivo y notificaciones
 
-La actividad solicita agregar evidencia opcional mediante cámara, geolocalización con permisos mínimos y notificaciones con fallback. El mapa de entregables, los responsables y las ramas independientes están en [el plan de trabajo de Semana 6](docs/semana%206/PLAN-DE-TRABAJO.md). Los adaptadores se ubican bajo `src/lib/device/`, el cliente de notificaciones bajo `src/lib/notifications/`, la documentación en `docs/capabilities.md` y las pruebas en `tests/capabilities.spec.ts`. El workflow ejecutable se guarda en `.github/workflows/`; el material de la actividad permanece bajo `docs/semana 6/`.
+Se añaden adaptadores de cámara (`capturePhoto` → Blob JPEG, pistas detenidas, sin persistencia), geolocalización (`getCurrentCoordinates` → solo lat/lon/accuracy) y un cliente de **notificaciones locales** con permiso solo por acción del usuario y fallback en UI. La evidencia fotográfica en el formulario es opcional, temporal y no entra a IndexedDB ni a la cola de sincronización. Consulte [docs/capabilities.md](docs/capabilities.md) para las decisiones, permisos, fallback y límites.
 
 ### Semana 8: estrategia y validación de captura
 

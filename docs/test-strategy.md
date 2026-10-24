@@ -12,7 +12,7 @@ Se encontró un bloqueo preexistente fuera de la validación de captura: `/manif
 
 | Riesgo | Capa elegida | Comprobación y aserción útil | Estado en este frente |
 | --- | --- | --- | --- |
-| Captura inválida | Unitaria | `tests/unit/capture-validation.spec.ts` comprueba datos válidos, normalización, campos requeridos, hallazgos negativos/no enteros/fuera del rango seguro y límites de longitud. La misma función es consumida por el formulario. | Implementada |
+| Captura inválida | Unitaria | `tests/unit/capture-validation.spec.ts` comprueba datos válidos, normalización, ubicación/responsable/resumen vacíos, longitudes máximas aceptadas (120/120/500) y excedidas, hallazgos negativos/no numéricos/fraccionarios/fuera del rango seguro. La misma función es consumida por el formulario. | Implementada |
 | Persistencia y reconexión | Integración y E2E | Guardar sin red debe conservar la inspección en IndexedDB después de recargar; al volver la red, debe cambiar a sincronizada. La prueba debe aislar IndexedDB y controlar la respuesta remota. | Pendiente de los frentes de integración/E2E |
 | Duplicado de sincronización | Unitaria e integración | La regla de idempotencia debe deduplicar la misma operación; una integración debe reintentar contra una respuesta remota controlada y asertar una sola inspección. La prueba debe fallar al retirar temporalmente esa protección. | La suite previa de sincronización ya prueba la cola; la evidencia de integración y defecto controlado está pendiente |
 | Permiso de capacidad del dispositivo no disponible | E2E | Simular permiso denegado o capacidad ausente desde la interfaz y comprobar que se puede guardar la captura sin depender del dispositivo del evaluador. | Pendiente del frente E2E |

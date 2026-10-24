@@ -214,6 +214,33 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Cambio que puedo defender o modificar en vivo:** La persistencia IndexedDB y el flujo `online → processPendingOperations`, incluida la protección de concurrencia y la conservación de conflictos.
 - **Uso declarado de IA:** Utilicé Codex para auditar el repositorio, integrar los contratos existentes, redactar documentación y revisar el diff. Revisé los cambios y registré las verificaciones bloqueadas tal como ocurrieron.
 
+## Semana 6
+
+### David Aguilar Rodríguez
+
+- **Rama de trabajo:** `feature/week-6-notifications-ui`.
+- **Commit SHA de notificaciones:** `c595a7292a7030ce59cc368bd340504d33808050`.
+- **Commit SHA de integración fotográfica:** '88eaf50fa95b026035df6f60e4d00f35b78111d1'.
+- **Contribución concreta:** implementé el cliente de notificaciones locales y su integración en el formulario: permisos tipados, solicitud explícita, aviso al guardar, fallback visible, manejo de errores y prevención de avisos duplicados. También integré la captura fotográfica opcional usando el adaptador de Marco (`capturePhoto`, `CameraCaptureError` y `AbortSignal`): acción explícita, vista previa temporal, descarte y cancelación, estado reactivo `isCapturing`, contador de versión frente a resultados tardíos y limpieza tras el guardado local confirmado.
+- **Decisión técnica que puedo explicar:** los permisos no se solicitan al cargar. La fotografía vive sólo como `Blob` en memoria y su URL de objeto se libera al sustituirla o limpiarla. No se adjunta a la inspección, no se persiste en IndexedDB, no ingresa a la cola y no se sincroniza; el registro conserva su flujo habitual con o sin foto.
+- **Pruebas automatizadas y resultado real:** `npm test`, `npm run build`, `npm run verify` y `git diff --check`: PASS. El primer build de la integración inicial falló por `EPERM` del entorno, pero el reintento terminó correctamente. Las advertencias `MODULE_TYPELESS_PACKAGE_JSON` no afectaron el resultado.
+- **Pruebas manuales en Brave:** PASS para permiso explícito y captura, vista previa, descarte, limpieza tras guardar, permiso de cámara denegado y fallback, guardado sin foto con cámara bloqueada, guardado offline `pending` y posterior sincronización `synced` con el transporte sintético, cancelación de captura, notificación autorizada y fallback de notificaciones denegadas.
+- **Limitaciones pendientes:** falta simular ausencia de API de cámara, desmontar o navegar durante una captura, comprobar adicionalmente que no se muestra foto tardía tras cerrar permisos y validar ausencia de API de notificaciones y deduplicación. La sincronización usada es sintética, no un backend de producción.
+- **Incidencia independiente:** el conflicto previo de rutas de `/manifest.webmanifest` provoca HTTP 500 en desarrollo y ya está registrado en GitHub Issues; no se atribuye a cámara ni notificaciones.
+- **Cambio que puedo defender o modificar en vivo:** permisos y fallback de notificaciones; captura temporal cancelable, liberación posterior al guardado y protección contra resultados tardíos.
+- **Uso de IA:** utilicé Codex para implementar y revisar los cambios, actualizar la evidencia y ejecutar verificaciones; revisé manualmente el diff, los resultados y las pruebas en Brave.
+
+### Dulce Acevedo Miguel
+
+- **Rama:** `feat/week6-dulce-tests-docs`.
+- **Commit SHA evaluado:** `8abf223d07ade99e647bfe600f02de3be3ba9d60`.
+- **Contribución concreta:** `tests/capabilities.spec.ts`, `docs/capabilities.md`, integración del spec en `npm test` y en `scripts/verify.mjs`, actualización de README y evidencia individual.
+- **Decisión técnica que puedo explicar:** pruebas deterministas con mocks de `navigator`/`document`/`Notification` para no depender de hardware ni permisos reales en CI; la UI permanece usable sin cámara ni notificaciones; la foto no se persiste.
+- **Prueba ejecutada y resultado:** `node tests/capabilities.spec.ts` → PASS; `npm test` → PASS; `npm run build` → PASS; `npm run verify` → Verificación técnica: pass (checks públicos Semana 5 y 6: PUBLIC_OK).
+- **Limitación o fallo diagnosticado:** las pruebas no sustituyen una validación E2E de diálogos de permiso en cada navegador; la notificación es local, no Web Push.
+- **Cambio que puedo defender o modificar en vivo:** casos de error tipados (`code`), fallback de notificaciones y contrato de no persistencia de la fotografía.
+- **Uso declarado de IA:** utilicé Claude para revisar el PR integrado, alinear contratos y redactar tests/docs; validación humana de comandos (`npm test`, `npm run build`, `npm run verify`) y del diff antes del commit.
+
 ## Semana 8
 
 ### Marco Antonio Aguilar Castillo
@@ -221,7 +248,7 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Contribución concreta y enlaces:** Extraje la regla de validación usada por el formulario en [capture-validation.ts](../src/lib/data/capture-validation.ts) e incorporé su prueba unitaria en [capture-validation.spec.ts](../tests/unit/capture-validation.spec.ts). Documenté la matriz riesgo–prueba y el diagnóstico en [test-strategy.md](../docs/test-strategy.md), y actualicé el README y los checks del manifest. Corregí el HTTP 500 eliminando el espejo público duplicado y manteniendo `src/app/manifest.ts` como fuente única; también actualicé la prueba para evaluar el objeto del manifest generado.
 - **Decisión técnica y motivo:** Compartir `validateCaptureFields()` entre el formulario y la prueba asegura que los casos unitarios ejercitan la regla real de captura. Mantener el manifest únicamente en el App Router evita el conflicto de Next.js con el archivo público para la misma ruta.
 - **Pruebas/comandos ejecutados:** `node tests/unit/capture-validation.spec.ts`, `npm test` y `npm run verify`. Además, inicié `npm run dev` y comprobé `/inspecciones` y `/manifest.webmanifest` en el navegador.
-- **Resultado observado:** La prueba unitaria y toda la suite pasaron. `npm run verify` terminó con código 0 y `Verificación técnica: pass`; también pasaron build, check público, escaneo de secretos y medición SSR/CSR. En desarrollo, `/inspecciones` respondió y cargó el estado local; `/manifest.webmanifest` respondió HTTP 200 con el JSON esperado. Node emitió avisos `MODULE_TYPELESS_PACKAGE_JSON` para archivos TypeScript, sin fallos.
-- **Qué demuestra y qué no demuestra:** Demuestra normalización de los textos, rechazo de campos requeridos vacíos, límites de longitud y rechazo de hallazgos negativos, fraccionarios o fuera del entero seguro; además, la configuración del manifest y su endpoint funcionan en desarrollo. No demuestra el flujo E2E offline, persistencia tras recarga, reconexión, sincronización sin duplicados ni captura con permisos denegados.
+- **Resultado observado:** La prueba unitaria y toda la suite pasaron, incluidas las suites de capacidades y cancelación incorporadas al integrar `main`. `npm run verify` terminó con código 0 y `Verificación técnica: pass`; también pasaron build, checks públicos, escaneo de secretos y medición SSR/CSR. En desarrollo, `/inspecciones` respondió y cargó el estado local; `/manifest.webmanifest` respondió HTTP 200 con el JSON esperado. Node emitió avisos `MODULE_TYPELESS_PACKAGE_JSON` para archivos TypeScript, sin fallos.
+- **Qué demuestra y qué no demuestra:** Demuestra normalización de los textos, rechazo de ubicación/responsable/resumen vacíos, aceptación de longitudes exactas de 120/120/500, rechazo de texto sobre el máximo y de hallazgos negativos, no numéricos, fraccionarios o fuera del entero seguro; además, la configuración del manifest y su endpoint funcionan en desarrollo. No demuestra el flujo E2E offline, persistencia tras recarga, reconexión, sincronización sin duplicados ni captura con permisos denegados.
 - **Limitación:** Los escenarios de integración/E2E y la CI específica de Semana 8 corresponden a los otros frentes; la verificación local no los sustituye. La ejecución de specs TypeScript conserva avisos de tipo de módulo.
 - **Uso de IA:** Utilicé GitHub Copilot como apoyo para extraer la regla y preparar la prueba y documentación. Revisé el código y comprobé personalmente los comandos y las rutas en el navegador.
