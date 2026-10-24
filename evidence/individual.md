@@ -241,6 +241,48 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Cambio que puedo defender o modificar en vivo:** casos de error tipados (`code`), fallback de notificaciones y contrato de no persistencia de la fotografía.
 - **Uso declarado de IA:** utilicé Claude para revisar el PR integrado, alinear contratos y redactar tests/docs; validación humana de comandos (`npm test`, `npm run build`, `npm run verify`) y del diff antes del commit.
 
+
+## Semana 8 
+
+### Dulce Acevedo Miguel (cola, integración y regresión controlada)
+
+- **Rama:** `week8-dulce-queue-integration`
+- **Commit SHA:** `cb9072f441149e743d03c84ba9ddbfbc02623681`.
+- **Alcance:** pruebas unitarias de idempotencia de cola e integración de persistencia offline sin duplicados al reintentar la sincronización.
+- **Decisión técnica que puedo explicar:** Se reutilizó `enqueueOperation` / `processPendingOperations` de `src/lib/sync/queue.ts` y el store IndexedDB existente. Las pruebas nuevas viven en `tests/unit/` y `tests/integration/` (entregables obligatorios), con fixtures en memoria o `fake-indexeddb`, limpieza de BD entre casos y transporte sintético (sin red real).
+
+- **Pruebas ejecutadas y resultado:**
+```text
+node tests/unit/queue-idempotency.spec.ts
+→ PASS (retryDelayMs, enqueued, duplicate, claves distintas)
+
+node tests/integration/offline-sync.spec.ts
+→ PASS (persistencia offline + sin duplicados al reintentar)
+
+npm test
+→ PASS (incluye las dos suites nuevas)
+```
+
+- **Defecto controlado (no integrado)** En rama temporal `week8-dulce-broken-dedup` se omitió el chequeo de `idempotencyKey` en `enqueueOperation`. Salida al ejecutar `node tests/unit/queue-idempotency.spec.ts`:
+```text
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+actual: 'enqueued'
+expected: 'duplicate'
+```
+- **Limitación o fallo diagnosticado:** Las pruebas no son E2E de navegador ni CI completo (frente del Integrante 3). La integración usa IndexedDB sintético y un transporte programado, no un servidor HTTP real.
+- **Uso declarado de IA:** utilicé claude como guia en la estructura de tests unitarios/integración, aserciones y flujo git de la regresión controlada; validación humana con ejecución local de npm test, revisión de aserciones contra queue.ts y restauración verificada del defecto.
+
+### Coordinación(E2E)
+
+Se acordó que las pruebas E2E del Integrante 3 cubran el flujo observable desde la UI, apoyándose en el comportamiento ya verificado en integración:
+
+- Guardar una inspección sin conexión (queda `pending` en IndexedDB y en la cola).
+- Conservar la captura tras recargar (persistencia local).
+- Al reconectar, sincronizar una sola vez (misma `idempotencyKey` no crea duplicados locales ni remotos).
+- La captura puede completarse aunque una capacidad del dispositivo esté denegada o ausente (frente E2E / capacidades).
+
+Este PR no implementa E2E ni CI; solo deja documentados los comportamientos que el frente 3 debe ejercitar desde la interfaz.
+
 ## Semana 8
 
 ### Marco Antonio Aguilar Castillo
@@ -252,3 +294,4 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Qué demuestra y qué no demuestra:** Demuestra normalización de los textos, rechazo de ubicación/responsable/resumen vacíos, aceptación de longitudes exactas de 120/120/500, rechazo de texto sobre el máximo y de hallazgos negativos, no numéricos, fraccionarios o fuera del entero seguro; además, la configuración del manifest y su endpoint funcionan en desarrollo. No demuestra el flujo E2E offline, persistencia tras recarga, reconexión, sincronización sin duplicados ni captura con permisos denegados.
 - **Limitación:** Los escenarios de integración/E2E y la CI específica de Semana 8 corresponden a los otros frentes; la verificación local no los sustituye. La ejecución de specs TypeScript conserva avisos de tipo de módulo.
 - **Uso de IA:** Utilicé GitHub Copilot como apoyo para extraer la regla y preparar la prueba y documentación. Revisé el código y comprobé personalmente los comandos y las rutas en el navegador.
+
