@@ -244,7 +244,7 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 ## Semana 8 - Integrante 2 (cola, integración y regresión controlada)
 
 - **Rama:** `week8-dulce-queue-integration`
-- **Commit SHA (rellenar tras el commit):** _(después de `git rev-parse HEAD`)_
+- **Commit SHA:** `cb9072f441149e743d03c84ba9ddbfbc02623681`.
 - **Alcance:** pruebas unitarias de idempotencia de cola e integración de persistencia offline sin duplicados al reintentar la sincronización.
 - **Decisión técnica que puedo explicar:** Se reutilizó `enqueueOperation` / `processPendingOperations` de `src/lib/sync/queue.ts` y el store IndexedDB existente. Las pruebas nuevas viven en `tests/unit/` y `tests/integration/` (entregables obligatorios), con fixtures en memoria o `fake-indexeddb`, limpieza de BD entre casos y transporte sintético (sin red real).
 
