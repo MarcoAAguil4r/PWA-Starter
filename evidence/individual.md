@@ -240,3 +240,31 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Limitación o fallo diagnosticado:** las pruebas no sustituyen una validación E2E de diálogos de permiso en cada navegador; la notificación es local, no Web Push.
 - **Cambio que puedo defender o modificar en vivo:** casos de error tipados (`code`), fallback de notificaciones y contrato de no persistencia de la fotografía.
 - **Uso declarado de IA:** utilicé Claude para revisar el PR integrado, alinear contratos y redactar tests/docs; validación humana de comandos (`npm test`, `npm run build`, `npm run verify`) y del diff antes del commit.
+
+## Semana 8 - Integrante 2 (cola, integración y regresión controlada)
+
+- **Rama:** `week8-dulce-queue-integration`
+- **Commit SHA (rellenar tras el commit):** _(después de `git rev-parse HEAD`)_
+- **Alcance:** pruebas unitarias de idempotencia de cola e integración de persistencia offline sin duplicados al reintentar la sincronización.
+- **Decisión técnica que puedo explicar:** Se reutilizó `enqueueOperation` / `processPendingOperations` de `src/lib/sync/queue.ts` y el store IndexedDB existente. Las pruebas nuevas viven en `tests/unit/` y `tests/integration/` (entregables obligatorios), con fixtures en memoria o `fake-indexeddb`, limpieza de BD entre casos y transporte sintético (sin red real).
+
+- **Pruebas ejecutadas y resultado:**
+```text
+node tests/unit/queue-idempotency.spec.ts
+→ PASS (retryDelayMs, enqueued, duplicate, claves distintas)
+
+node tests/integration/offline-sync.spec.ts
+→ PASS (persistencia offline + sin duplicados al reintentar)
+
+npm test
+→ PASS (incluye las dos suites nuevas)
+```
+
+- **Defecto controlado (no integrado)** En rama temporal `week8-dulce-broken-dedup` se omitió el chequeo de `idempotencyKey` en `enqueueOperation`. Salida al ejecutar `node tests/unit/queue-idempotency.spec.ts`:
+```text
+AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
+actual: 'enqueued'
+expected: 'duplicate'
+```
+- **Limitación o fallo diagnosticado:** Las pruebas no son E2E de navegador ni CI completo (frente del Integrante 3). La integración usa IndexedDB sintético y un transporte programado, no un servidor HTTP real.
+- **Uso declarado de IA:** utilicé claude como guia en la estructura de tests unitarios/integración, aserciones y flujo git de la regresión controlada; validación humana con ejecución local de npm test, revisión de aserciones contra queue.ts y restauración verificada del defecto.
