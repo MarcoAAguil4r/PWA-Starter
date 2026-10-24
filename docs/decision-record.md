@@ -88,3 +88,7 @@ Se mantiene **Next.js** y el App Router como base del proyecto. `src/app/manifes
 El shell de la interfaz se separó de `page.tsx` en `src/components/app-shell.tsx`. Esta separación concentra los landmarks de la página y la navegación principal sin alterar los datos sintéticos ni la pantalla principal.
 
 Esta decisión no implica funcionalidades offline reales: todavía no se implementan service worker, almacenamiento o sincronización. Esas capacidades requieren trabajo posterior y validación específica, como se describe en las limitaciones de este ADR.
+
+### Corrección operativa — Semana 8
+
+El diagnóstico de desarrollo encontró que Next.js no permite servir simultáneamente `src/app/manifest.ts` y `public/manifest.webmanifest` en la misma ruta: `/manifest.webmanifest` devolvía HTTP 500. Se elimina el espejo público y se conserva `src/app/manifest.ts` como fuente única, coherente con la decisión anterior. El service worker continúa precacheando la ruta generada. Las pruebas y checks estructurales verifican ahora la fuente del App Router y los iconos.

@@ -1,20 +1,20 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
+import manifestDefinition from "../src/app/manifest.ts";
 
 const root = resolve(import.meta.dirname, "..");
 const read = (file) => readFileSync(resolve(root, file), "utf8");
-const manifest = read("src/app/manifest.ts");
-const publicManifest = JSON.parse(read("public/manifest.webmanifest"));
+const manifest = manifestDefinition();
 
-assert.equal(publicManifest.name, "Inspecciones de laboratorio");
-assert.equal(publicManifest.short_name, "Inspecciones");
-assert.equal(publicManifest.start_url, "/");
-assert.equal(publicManifest.scope, "/");
-assert.equal(publicManifest.display, "standalone");
-assert.equal(publicManifest.lang, "es-MX");
+assert.equal(manifest.name, "Inspecciones de laboratorio");
+assert.equal(manifest.short_name, "Inspecciones");
+assert.equal(manifest.start_url, "/");
+assert.equal(manifest.scope, "/");
+assert.equal(manifest.display, "standalone");
+assert.equal(manifest.lang, "es-MX");
 assert.deepEqual(
-  publicManifest.icons.map(({ src }) => src),
+  manifest.icons.map(({ src }) => src),
   ["/icons/icon-192x192.png", "/icons/icon-512x512.png"]
 );
 
@@ -26,27 +26,13 @@ const validateManifest = (value) => {
   }
 };
 
-const manifestFields = [
-  ["name", /name:\s*"Inspecciones de laboratorio"/],
-  ["short_name", /short_name:\s*"Inspecciones"/],
-  ["description", /description:\s*"Registro de mantenimiento para inspecciones de laboratorio\."/],
-  ["start_url", /start_url:\s*"\/"/],
-  ["scope", /scope:\s*"\/"/],
-  ["display", /display:\s*"standalone"/],
-  ["theme_color", /theme_color:\s*"#[0-9a-fA-F]{6}"/],
-  ["background_color", /background_color:\s*"#[0-9a-fA-F]{6}"/],
-  ["lang", /lang:\s*"es-MX"/],
-];
-
-for (const [field, pattern] of manifestFields) {
-  assert.match(manifest, pattern, `El manifest debe declarar ${field}.`);
+assert.equal(manifest.description, "Registro de mantenimiento para inspecciones de laboratorio.");
+assert.match(manifest.theme_color, /^#[0-9a-fA-F]{6}$/);
+assert.match(manifest.background_color, /^#[0-9a-fA-F]{6}$/);
+for (const icon of manifest.icons) {
+  assert.ok(existsSync(resolve(root, "public", icon.src.slice(1))), `Debe existir ${icon.src}.`);
 }
-
-for (const size of [192, 512]) {
-  const icon = `icon-${size}x${size}.png`;
-  assert.match(manifest, new RegExp(`src:\\s*"/icons/${icon.replace(".", "\\.")}"`), `El manifest debe referenciar ${icon}.`);
-  assert.ok(existsSync(resolve(root, "public/icons", icon)), `Debe existir public/icons/${icon}.`);
-}
+validateManifest(manifest);
 
 assert.throws(() => validateManifest({ display: "standalone", icons: [] }), /start_url/);
 assert.throws(() => validateManifest({ start_url: "/", display: "browser", icons: [] }), /standalone/);

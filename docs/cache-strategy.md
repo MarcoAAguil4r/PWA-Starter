@@ -12,7 +12,7 @@ El worker se registra desde `ServiceWorkerRegistration`, incorporado en el shell
 
 ## Precache
 
-Durante `install`, `cache.addAll()` descarga `/`, `/manifest.webmanifest`, `/icons/icon-192x192.png` y `/icons/icon-512x512.png` en el precache. Son los únicos recursos precacheados: la página raíz, el manifest y los iconos públicos.
+Durante `install`, `cache.addAll()` descarga `/`, `/manifest.webmanifest`, `/icons/icon-192x192.png` y `/icons/icon-512x512.png` en el precache. El App Router genera el manifest desde `src/app/manifest.ts`; los iconos se sirven desde `public/icons/`. Son los únicos recursos precacheados: la página raíz, el manifest y los iconos.
 
 Si cualquiera falla, la promesa de instalación se rechaza; la versión nueva no queda instalada/activada como una versión lista. Si ya había un worker activo, este conserva el control hasta que una instalación posterior tenga éxito. Si no lo había, no existe cobertura offline. La prueba `tests/service-worker.spec.ts` cubre la lista de precache y el rechazo de una instalación fallida.
 
