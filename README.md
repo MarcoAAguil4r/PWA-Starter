@@ -4,24 +4,32 @@ Comiencen por `START_HERE.md` y lean `ACTIVIDAD-01.md`. Este es un proyecto acum
 
 ## Entorno
 
-Node.js 22.18 o posterior, npm 10 o posterior, Git y cuenta de GitHub. Node 22.18+ ejecuta los specs TypeScript sin agregar un runner. No se requiere Make. Registren aquí las versiones usadas (`node --version`, `npm --version`) y cualquier dificultad de entorno que encuentren.
+Node.js 22.18 o posterior, npm 10 o posterior, Git y cuenta de GitHub. Node 22.18+ ejecuta los specs TypeScript sin agregar un runner. No se requiere Make. Comprueba el entorno con `node --version` y `npm --version`.
 
-## Ejecución
+## Instalación, arranque y comprobación
 
 ```bash
 npm ci
 npm run dev
 ```
 
-Abran `http://localhost:3000` y comprueben las tres inspecciones sintéticas. Detengan el servidor con Ctrl+C.
+Abre `http://localhost:3000` y detén el servidor con Ctrl+C. Para comprobar pruebas, tipos y build:
+
+```bash
+npm test
+npm run build
+npm run verify
+```
 
 ## Verificación
 
 ```bash
+npm test
+npm run build
 npm run verify
 ```
 
-Ejecuta la comprobación de estructura, `npm test`, el build de producción y la medición HTTP repetible de las rutas SSR/CSR; genera `reports/verification.json` y `reports/rendering-metrics.json`. El reporte contiene resultados técnicos y documentos para revisión, no una calificación automática. `make verify` es equivalente. Para repetir únicamente la medición después de un build, ejecuta `npm run measure:rendering`.
+`npm test` ejecuta las pruebas automatizadas; `npm run build` compila la aplicación para producción y comprueba tipos. `npm run verify` ejecuta la comprobación de estructura, las pruebas, el build y la medición HTTP repetible de las rutas SSR/CSR; genera `reports/verification.json` y `reports/rendering-metrics.json`. El reporte contiene resultados técnicos y documentos para revisión, no una calificación automática. `make verify` es equivalente. Para repetir únicamente la medición después de un build, ejecuta `npm run measure:rendering`.
 
 El workflow de Semana 3 (`.github/workflows/week-03-w03-service-worker-offline.yml`) instala dependencias, compila, comprueba que existan los artefactos requeridos, ejecuta `npm test` y corre el check público. Su artefacto se llama `academic-evidence-w03-service-worker-offline`. El reporte local se excluye de Git: adjúntenlo en Classroom o descarguen el del SHA entregado desde Actions.
 
@@ -113,13 +121,18 @@ bash "docs/semana 5/public-tests/check.sh"
 
 ### Semana 6: capacidades del dispositivo y notificaciones
 
-Se añaden adaptadores de cámara (`capturePhoto` → Blob JPEG, pistas detenidas, sin persistencia), geolocalización (`getCurrentCoordinates` → solo lat/lon/accuracy) y un cliente de **notificaciones locales** con permiso solo por acción del usuario y fallback en UI. La evidencia fotográfica en el formulario es opcional, temporal y no entra a IndexedDB ni a la cola de sincronización.
+Se añaden adaptadores de cámara (`capturePhoto` → Blob JPEG, pistas detenidas, sin persistencia), geolocalización (`getCurrentCoordinates` → solo lat/lon/accuracy) y un cliente de **notificaciones locales** con permiso solo por acción del usuario y fallback en UI. La evidencia fotográfica en el formulario es opcional, temporal y no entra a IndexedDB ni a la cola de sincronización. Consulte [docs/capabilities.md](docs/capabilities.md) para las decisiones, permisos, fallback y límites.
 
-Decisiones, permisos, fallback y límites: [docs/capabilities.md](docs/capabilities.md).
+### Semana 8: estrategia y validación de captura
+
+La estrategia relaciona captura inválida, persistencia/reconexión, duplicado de sincronización y permisos del dispositivo con sus capas de prueba en [docs/test-strategy.md](docs/test-strategy.md). La regla de captura se comparte entre el formulario y `src/lib/data/capture-validation.ts`; su prueba unitaria se ejecuta con el resto de `npm test` o de forma aislada:
 
 ```bash
-npm ci
-npm test          # incluye tests/capabilities.spec.ts
+node tests/unit/capture-validation.spec.ts
+npm test
 npm run build
-npm run verify
-bash "docs/semana 6/public-tests/check.sh"
+```
+
+La validación normaliza los campos de texto, exige ubicación, responsable y resumen no vacíos, respeta sus límites de longitud y acepta únicamente hallazgos enteros seguros no negativos. La prueba no pretende demostrar persistencia, sincronización ni permisos; esos comportamientos requieren sus pruebas de integración y E2E.
+
+En el diagnóstico inicial (Node.js v22.22.0, npm 10.9.4), las pruebas existentes pasaron y `/inspecciones` cargó los registros locales y el formulario. Se detectó y corrigió un HTTP 500 en `/manifest.webmanifest`: Next.js no permite que `public/manifest.webmanifest` y `src/app/manifest.ts` sirvan simultáneamente la misma ruta. Se conserva la ruta del App Router como fuente única, se elimina el espejo público y se verifica el objeto de manifest generado. `public/icons/` conserva los iconos. Después de la corrección, el manifest respondió HTTP 200 y `npm run verify` terminó con `Verificación técnica: pass`. La matriz, el alcance y las limitaciones de esta semana están en [docs/test-strategy.md](docs/test-strategy.md).

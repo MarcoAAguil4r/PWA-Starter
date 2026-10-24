@@ -241,7 +241,10 @@ Uso declarado de IA: Utilicé Codex para inspeccionar el contrato existente, pro
 - **Cambio que puedo defender o modificar en vivo:** casos de error tipados (`code`), fallback de notificaciones y contrato de no persistencia de la fotografía.
 - **Uso declarado de IA:** utilicé Claude para revisar el PR integrado, alinear contratos y redactar tests/docs; validación humana de comandos (`npm test`, `npm run build`, `npm run verify`) y del diff antes del commit.
 
-## Semana 8 - Integrante 2 (cola, integración y regresión controlada)
+
+## Semana 8 
+
+### Dulce Acevedo Miguel (cola, integración y regresión controlada)
 
 - **Rama:** `week8-dulce-queue-integration`
 - **Commit SHA:** `cb9072f441149e743d03c84ba9ddbfbc02623681`.
@@ -268,3 +271,16 @@ expected: 'duplicate'
 ```
 - **Limitación o fallo diagnosticado:** Las pruebas no son E2E de navegador ni CI completo (frente del Integrante 3). La integración usa IndexedDB sintético y un transporte programado, no un servidor HTTP real.
 - **Uso declarado de IA:** utilicé claude como guia en la estructura de tests unitarios/integración, aserciones y flujo git de la regresión controlada; validación humana con ejecución local de npm test, revisión de aserciones contra queue.ts y restauración verificada del defecto.
+
+## Semana 8
+
+### Marco Antonio Aguilar Castillo
+
+- **Contribución concreta y enlaces:** Extraje la regla de validación usada por el formulario en [capture-validation.ts](../src/lib/data/capture-validation.ts) e incorporé su prueba unitaria en [capture-validation.spec.ts](../tests/unit/capture-validation.spec.ts). Documenté la matriz riesgo–prueba y el diagnóstico en [test-strategy.md](../docs/test-strategy.md), y actualicé el README y los checks del manifest. Corregí el HTTP 500 eliminando el espejo público duplicado y manteniendo `src/app/manifest.ts` como fuente única; también actualicé la prueba para evaluar el objeto del manifest generado.
+- **Decisión técnica y motivo:** Compartir `validateCaptureFields()` entre el formulario y la prueba asegura que los casos unitarios ejercitan la regla real de captura. Mantener el manifest únicamente en el App Router evita el conflicto de Next.js con el archivo público para la misma ruta.
+- **Pruebas/comandos ejecutados:** `node tests/unit/capture-validation.spec.ts`, `npm test` y `npm run verify`. Además, inicié `npm run dev` y comprobé `/inspecciones` y `/manifest.webmanifest` en el navegador.
+- **Resultado observado:** La prueba unitaria y toda la suite pasaron, incluidas las suites de capacidades y cancelación incorporadas al integrar `main`. `npm run verify` terminó con código 0 y `Verificación técnica: pass`; también pasaron build, checks públicos, escaneo de secretos y medición SSR/CSR. En desarrollo, `/inspecciones` respondió y cargó el estado local; `/manifest.webmanifest` respondió HTTP 200 con el JSON esperado. Node emitió avisos `MODULE_TYPELESS_PACKAGE_JSON` para archivos TypeScript, sin fallos.
+- **Qué demuestra y qué no demuestra:** Demuestra normalización de los textos, rechazo de ubicación/responsable/resumen vacíos, aceptación de longitudes exactas de 120/120/500, rechazo de texto sobre el máximo y de hallazgos negativos, no numéricos, fraccionarios o fuera del entero seguro; además, la configuración del manifest y su endpoint funcionan en desarrollo. No demuestra el flujo E2E offline, persistencia tras recarga, reconexión, sincronización sin duplicados ni captura con permisos denegados.
+- **Limitación:** Los escenarios de integración/E2E y la CI específica de Semana 8 corresponden a los otros frentes; la verificación local no los sustituye. La ejecución de specs TypeScript conserva avisos de tipo de módulo.
+- **Uso de IA:** Utilicé GitHub Copilot como apoyo para extraer la regla y preparar la prueba y documentación. Revisé el código y comprobé personalmente los comandos y las rutas en el navegador.
+

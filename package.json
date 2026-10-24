@@ -11,7 +11,7 @@
     "build": "next build",
     "start": "next start",
     "measure:rendering": "node scripts/measure-rendering.mjs",
-    "test": "node tests/starter.spec.mjs && node tests/manifest.spec.mjs && node tests/service-worker.spec.ts && node tests/offline.spec.ts && node tests/rendering.spec.ts && node tests/sync.spec.ts && node tests/capabilities.spec.ts && node tests/camera-cancellation.spec.mjs && node tests/unit/queue-idempotency.spec.ts && node tests/integration/offline-sync.spec.ts",
+    "test": "node tests/starter.spec.mjs && node tests/manifest.spec.mjs && node tests/service-worker.spec.ts && node tests/offline.spec.ts && node tests/rendering.spec.ts && node tests/sync.spec.ts && node tests/capabilities.spec.ts && node tests/camera-cancellation.spec.mjs && node tests/unit/capture-validation.spec.ts && node tests/unit/queue-idempotency.spec.ts && node tests/integration/offline-sync.spec.ts",
     "verify": "node scripts/verify.mjs"
   },
   "dependencies": {
