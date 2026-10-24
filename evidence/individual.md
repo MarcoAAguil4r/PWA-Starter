@@ -272,6 +272,17 @@ expected: 'duplicate'
 - **Limitación o fallo diagnosticado:** Las pruebas no son E2E de navegador ni CI completo (frente del Integrante 3). La integración usa IndexedDB sintético y un transporte programado, no un servidor HTTP real.
 - **Uso declarado de IA:** utilicé claude como guia en la estructura de tests unitarios/integración, aserciones y flujo git de la regresión controlada; validación humana con ejecución local de npm test, revisión de aserciones contra queue.ts y restauración verificada del defecto.
 
+### Coordinación(E2E)
+
+Se acordó que las pruebas E2E del Integrante 3 cubran el flujo observable desde la UI, apoyándose en el comportamiento ya verificado en integración:
+
+- Guardar una inspección sin conexión (queda `pending` en IndexedDB y en la cola).
+- Conservar la captura tras recargar (persistencia local).
+- Al reconectar, sincronizar una sola vez (misma `idempotencyKey` no crea duplicados locales ni remotos).
+- La captura puede completarse aunque una capacidad del dispositivo esté denegada o ausente (frente E2E / capacidades).
+
+Este PR no implementa E2E ni CI; solo deja documentados los comportamientos que el frente 3 debe ejercitar desde la interfaz.
+
 ## Semana 8
 
 ### Marco Antonio Aguilar Castillo

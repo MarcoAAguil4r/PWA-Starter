@@ -3,6 +3,7 @@ import "fake-indexeddb/auto";
 import { IndexedDbInspectionStore, openInspectionDatabase, createStoredInspection } from "../../src/lib/storage/inspection-store.ts";
 import { resolveInspectionConflict } from "../../src/lib/sync/conflict-policy.ts";
 import { enqueueOperation, processPendingOperations } from "../../src/lib/sync/queue.ts";
+import { InMemoryInspectionSyncServer } from "../../src/lib/sync/synthetic-server.ts";
 import type { Inspection } from "../../src/lib/data/inspections.ts";
 import type { SyncOperation } from "../../src/lib/storage/schema.ts";
 import { INSPECTION_DATABASE_NAME } from "../../src/lib/storage/schema.ts";
@@ -27,7 +28,10 @@ async function resetDatabase(): Promise<void> {
     const request = indexedDB.deleteDatabase(INSPECTION_DATABASE_NAME);
     request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error ?? new Error("deleteDatabase failed"));
-    request.onblocked = () => resolve();
+    // No tratar onblocked como éxito: la BD aún no se eliminó.
+    request.onblocked = () => {
+      reject(new Error("deleteDatabase blocked — cierra conexiones abiertas antes de resetear"));
+    };
   });
 }
 
@@ -68,7 +72,7 @@ await withStore(async (store) => {
   assert.equal(ops[0].idempotencyKey, key);
 });
 
-// 2) Reintentar la misma sincronización no crea duplicados
+// 2) Sincronización + reintento: el servidor simulado aplica una sola vez
 await withStore(async (store) => {
   const inspection = syntheticInspection("inspection-offline-002");
   const key = "idem-offline-002";
@@ -83,44 +87,60 @@ await withStore(async (store) => {
   };
 
   await store.saveCapture(record, op);
-
-  // Encolar de nuevo la misma clave (reintento local) → duplicate
   assert.equal(await enqueueOperation(store, op), "duplicate");
   assert.equal((await store.listOperations()).length, 1);
 
-  // Transporte fixture: primera respuesta OK
+  // Servidor en memoria con registro por idempotencyKey (fixture remoto)
+  const server = new InMemoryInspectionSyncServer();
   let sendCount = 0;
   const transport = {
-    async send() {
+    async send(operation: SyncOperation) {
       sendCount += 1;
-      return { ok: true as const, remote: { inspection, revision: 1 } };
+      return server.apply(operation);
     }
   };
 
-  const first = await processPendingOperations(store, transport, resolveInspectionConflict, () => now);
+  const first = await processPendingOperations(
+    store,
+    transport,
+    resolveInspectionConflict,
+    () => now
+  );
   assert.equal(first.length, 1);
   assert.ok(
     first[0].kind === "synced" || first[0].kind === "already-applied",
-    `resultado inesperado: ${first[0].kind}`
+    `primer resultado inesperado: ${first[0].kind}`
   );
   assert.equal(sendCount, 1);
   assert.equal((await store.getInspection(inspection.id))?.syncStatus, "synced");
   assert.equal((await store.listOperations()).length, 0);
 
-  // Reencolar y procesar otra vez no debe dejar una segunda inspección ni cola sucia
-  const again = createStoredInspection(
-    { ...inspection, summary: "No debe duplicar en servidor local" },
-    key,
-    "2026-10-23T19:05:00.000Z"
-  );
-  // saveCapture usa add(); misma id fallaría. Comprobamos idempotencia en cola:
+  // Una sola inspección remota tras el primer envío
+  const remoteAfterFirst = server.getInspection(inspection.id);
+  assert.ok(remoteAfterFirst, "el servidor debe conservar la inspección");
+  assert.equal(remoteAfterFirst.revision, 1);
+
+  // Reintento con la misma clave: vuelve a encolar y procesar
   assert.equal(await enqueueOperation(store, op), "enqueued");
-  const second = await processPendingOperations(store, transport, resolveInspectionConflict, () => now);
+  const second = await processPendingOperations(
+    store,
+    transport,
+    resolveInspectionConflict,
+    () => now
+  );
   assert.equal(second.length, 1);
-  // already-applied o synced según política; no debe crecer la lista de inspecciones
+  assert.equal(sendCount, 2, "el reintento puede reenviar, pero el servidor no duplica");
+
+  // Servidor: misma revisión, una sola entrada remota
+  const remoteAfterRetry = server.getInspection(inspection.id);
+  assert.ok(remoteAfterRetry);
+  assert.equal(remoteAfterRetry.revision, 1, "reintentar no debe subir la revisión otra vez");
+  assert.deepEqual(remoteAfterRetry.inspection, inspection);
+
+  // Local: una sola inspección, cola vacía
   const all = await store.listInspections();
-  const sameId = all.filter((item) => item.id === inspection.id);
-  assert.equal(sameId.length, 1, "no debe haber inspecciones duplicadas por reintento");
+  assert.equal(all.filter((item) => item.id === inspection.id).length, 1);
+  assert.equal((await store.listOperations()).length, 0);
 });
 
-console.log("offline-sync.spec.ts: PASS (persistencia offline + sin duplicados al reintentar)");
+console.log("offline-sync.spec.ts: PASS (persistencia offline + servidor idempotente sin duplicados)");
