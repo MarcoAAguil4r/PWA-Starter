@@ -105,7 +105,6 @@ function installNavigatorAndDocument(mocks: {
 function installNotificationApi(permission: NotificationPermission | "missing") {
   const previous = Object.getOwnPropertyDescriptor(globalThis, "Notification");
   if (permission === "missing") {
-    // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
     delete (globalThis as { Notification?: unknown }).Notification;
   } else {
     const instances: Array<{ title: string; options?: NotificationOptions }> = [];

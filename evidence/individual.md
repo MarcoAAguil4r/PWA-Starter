@@ -295,3 +295,18 @@ Este PR no implementa E2E ni CI; solo deja documentados los comportamientos que 
 - **Limitación:** Los escenarios de integración/E2E y la CI específica de Semana 8 corresponden a los otros frentes; la verificación local no los sustituye. La ejecución de specs TypeScript conserva avisos de tipo de módulo.
 - **Uso de IA:** Utilicé GitHub Copilot como apoyo para extraer la regla y preparar la prueba y documentación. Revisé el código y comprobé personalmente los comandos y las rutas en el navegador.
 
+## Semana 8
+
+### David Aguilar Rodriguez — Integrante 3: E2E, CI y reportes
+
+- **Responsable, semana, rol y rama:** David Aguilar Rodriguez; Semana 8; Integrante 3 — E2E, CI y reportes; `feature/week-8-e2e-ciDavid`.
+- **SHA del commit de implementación:** 65548ce21487362d873b15e3a5d78a925d787501.
+- **Pull Request:** https://github.com/MarcoAAguil4r/PWA-Starter/pull/7
+- **Contribución técnica:** implementé Playwright en `playwright.config.ts` y dos escenarios en `tests/e2e/inspection-workspace.spec.ts`: captura offline `pending` en IndexedDB, persistencia tras recargar sin conexión, reconexión y sincronización idempotente con remoto sintético; y permiso de cámara denegado con guardado sin fotografía. También configuré lint, typecheck, cobertura V8, reportes HTML/JUnit/trazas, `.gitignore` y el workflow de Semana 8.
+- **Diagnóstico y corrección del worker:** durante la primera recarga offline, Playwright registró que un chunk de Next.js respondió HTTP 503 con `X-Offline-Fallback: true`; el HTML SSR quedó visible pero no se hidrató el formulario. Se corrigió `public/sw.js` para precachear el shell público sintético de `/inspecciones` y descubrir los recursos `/_next/static/` desde el HTML sin hashes fijos. Las API permanecen excluidas, y una navegación sin copia propia ya no recibe HTML de `/`. Las pruebas del worker cubren ese comportamiento y la actualización del shell online.
+- **Resultados locales verificados por David:** `npm run test:e2e` PASS — 2 pruebas E2E aprobadas; también ejecutó con éxito el build de Next.js. `npm test` PASS — 11 suites existentes. `npm run verify` PASS — verificación técnica completa, con `SECRET_SCAN_OK`, `PUBLIC_OK` y `Verificación técnica: pass.` `git diff --check` no reportó errores de formato; solo avisos LF/CRLF de Windows.
+- **Resultados ejecutados por Codex en esta sesión:** `node tests/service-worker.spec.ts`, `node tests/offline.spec.ts`, `npm run build` y `npx playwright test tests/e2e/inspection-workspace.spec.ts` terminaron PASS; Playwright reportó 2 pruebas aprobadas. Estas ejecuciones no sustituyen ni se atribuyen como comandos ejecutados personalmente por David.
+- **Cobertura y reportes:** `npm run test:coverage` usa la salida V8 de pruebas Node reales y conserva los JSON en `coverage/v8/`; `summary.json` identifica módulos de `src/` y sus registros de rango sin porcentajes. No mide cobertura de navegador. Playwright produce HTML, JUnit y captura/traza ante error; CI los sube incluso al fallar una etapa.
+- **Limitaciones y pendientes:** el remoto E2E usa datos/respuestas sintéticas, no un servidor productivo externo ni sincronización entre dispositivos. La compatibilidad con navegadores distintos de Edge/Chrome requiere ejecuciones adicionales si no se realizan. GitHub Actions sigue pendiente de incorporación, push y ejecución real; también están pendientes URL de PR, URL de Actions/artefactos, SHA final de `main` y tag final de Semana 8.
+- **Uso de IA:** utilicé Codex para implementación y revisión técnica. ChatGPT apoyó la interpretación de resultados, diagnóstico y planificación. David debe revisar los cambios y conservar la responsabilidad de las verificaciones y la entrega.
+
