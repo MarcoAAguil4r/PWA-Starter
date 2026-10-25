@@ -40,7 +40,7 @@ export default function InspectionDetailPage() {
     return (
       <section aria-labelledby="detail-heading" className="content-section">
         <h2 id="detail-heading">Inspección no encontrada</h2>
-        <p>No existe una inspección con el identificador "{params.id}".</p>
+        <p>No existe una inspección con el identificador &quot;{params.id}&quot;.</p>
         <a href="/inspecciones">← Volver al listado</a>
       </section>
     );

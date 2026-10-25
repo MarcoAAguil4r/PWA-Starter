@@ -1,7 +1,10 @@
-const CACHE_VERSION = "w03-v1";
+const CACHE_VERSION = "w08-v1";
 const PRECACHE_NAME = `pwa-precache-${CACHE_VERSION}`;
 const RUNTIME_NAME = `pwa-runtime-${CACHE_VERSION}`;
-const PRECACHE_URLS = ["/", "/manifest.webmanifest", "/icons/icon-192x192.png", "/icons/icon-512x512.png"];
+const PRECACHE_URLS = ["/", "/inspecciones", "/manifest.webmanifest", "/icons/icon-192x192.png", "/icons/icon-512x512.png"];
+// This route contains only the project's public synthetic fixtures. It is the
+// offline application shell, never an API response or a user-specific page.
+const OFFLINE_SHELL_DOCUMENTS = new Set(["/inspecciones"]);
 
 const isSameOrigin = (url) => url.origin === self.location.origin;
 const isNavigation = (request) => request.mode === "navigate";
@@ -17,9 +20,7 @@ const isCacheableResponse = (response) => {
 };
 
 self.addEventListener("install", (event) => {
-  event.waitUntil(
-    caches.open(PRECACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
-  );
+  event.waitUntil(precacheApplicationShell());
 });
 
 self.addEventListener("activate", (event) => {
@@ -65,16 +66,64 @@ self.addEventListener("fetch", (event) => {
 async function networkFirstNavigation(request) {
   try {
     const response = await fetch(request);
-    if (isCacheableResponse(response)) {
+    if (isCacheableResponse(response) || isOfflineShellDocumentRequest(request, response)) {
       const cache = await caches.open(RUNTIME_NAME);
       await cache.put(request, response.clone());
     }
     return response;
   } catch {
     const cachedResponse = await caches.match(request);
-    const fallbackResponse = await caches.match("/");
-    return cachedResponse || fallbackResponse || offlineFallback();
+    return cachedResponse || offlineFallback();
   }
+}
+
+function isOfflineShellDocumentRequest(request, response) {
+  return OFFLINE_SHELL_DOCUMENTS.has(new URL(request.url).pathname) && response?.status === 200 && response.type === "basic";
+}
+
+/**
+ * Next.js names build assets with hashes. Discovering them from the public
+ * inspection shell avoids coupling this worker to a particular build while
+ * ensuring they are available before this worker controls the first reload.
+ */
+async function precacheApplicationShell() {
+  const cache = await caches.open(PRECACHE_NAME);
+  const staticAssets = new Set();
+  const resources = new Map();
+
+  for (const path of PRECACHE_URLS) {
+    const request = new Request(new URL(path, self.location.origin));
+    const response = await fetch(request);
+    if (!isPrecacheableResponse(response, path)) throw new TypeError(`No se pudo precachear ${path}`);
+    resources.set(request.url, { request, response: response.clone() });
+
+    if (path === "/inspecciones") {
+      for (const asset of staticAssetsFromHtml(await response.clone().text())) staticAssets.add(asset);
+    }
+  }
+
+  await Promise.all([...staticAssets].map(async (asset) => {
+    const request = new Request(asset);
+    const response = await fetch(request);
+    if (!isCacheableResponse(response)) throw new TypeError(`No se pudo precachear ${request.url}`);
+    resources.set(request.url, { request, response: response.clone() });
+  }));
+
+  await Promise.all([...resources.values()].map(({ request, response }) => cache.put(request, response)));
+}
+
+function isPrecacheableResponse(response, path) {
+  return isCacheableResponse(response) || (OFFLINE_SHELL_DOCUMENTS.has(path) && response?.status === 200 && response.type === "basic");
+}
+
+function staticAssetsFromHtml(html) {
+  const assets = new Set();
+  const attributes = /(?:src|href)=["']([^"']+)["']/g;
+  for (const match of html.matchAll(attributes)) {
+    const url = new URL(match[1], self.location.origin);
+    if (isSameOrigin(url) && isStaticAsset(url)) assets.add(url.href);
+  }
+  return assets;
 }
 
 async function cacheFirstStatic(request) {

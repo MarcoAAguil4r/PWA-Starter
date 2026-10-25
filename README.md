@@ -52,9 +52,9 @@ La interfaz sigue utilizando exclusivamente inspecciones sintéticas. El listado
 
 ### Semana 3: service worker y consulta offline
 
-En una compilación de producción, el shell registra `/sw.js` con alcance `/`. El worker precachea `/`, el manifest y los dos iconos; usa network-first para navegaciones y cache-first para recursos de Next, iconos y manifest. No intercepta API, solicitudes no `GET`, otros orígenes, ni implementa almacenamiento de formularios o sincronización de datos. Consulte [la estrategia de caché](docs/cache-strategy.md) para el detalle, riesgos y actualización.
+En una compilación de producción, el shell registra `/sw.js` con alcance `/`. El worker precachea el shell público sintético de `/inspecciones`, el manifest, iconos y los recursos `/_next/static/` descubiertos desde el HTML del build, sin fijar hashes. Usa network-first para navegaciones y cache-first para recursos de Next, iconos y manifest. No intercepta API, solicitudes no `GET` ni otros orígenes; tampoco cachea respuestas de `/api/`. Consulte [la estrategia de caché](docs/cache-strategy.md) para el detalle, riesgos y actualización.
 
-Con un recurso estático no disponible, el worker entrega una página «Sin conexión» con estado 503. Una navegación puede recuperarse desde su copia cacheada o desde `/`; si ninguna está disponible, también recibe el fallback 503.
+Con un recurso estático no disponible, el worker entrega una página «Sin conexión» con estado 503. Una navegación solo puede recuperarse desde su propia copia cacheada; si no existe, recibe el fallback 503 y nunca HTML de otra ruta.
 
 Los comandos configurados ejecutan la validación de Semanas 1, 2 y 3:
 
@@ -136,3 +136,21 @@ npm run build
 La validación normaliza los campos de texto, exige ubicación, responsable y resumen no vacíos, respeta sus límites de longitud y acepta únicamente hallazgos enteros seguros no negativos. La prueba no pretende demostrar persistencia, sincronización ni permisos; esos comportamientos requieren sus pruebas de integración y E2E.
 
 En el diagnóstico inicial (Node.js v22.22.0, npm 10.9.4), las pruebas existentes pasaron y `/inspecciones` cargó los registros locales y el formulario. Se detectó y corrigió un HTTP 500 en `/manifest.webmanifest`: Next.js no permite que `public/manifest.webmanifest` y `src/app/manifest.ts` sirvan simultáneamente la misma ruta. Se conserva la ruta del App Router como fuente única, se elimina el espejo público y se verifica el objeto de manifest generado. `public/icons/` conserva los iconos. Después de la corrección, el manifest respondió HTTP 200 y `npm run verify` terminó con `Verificación técnica: pass`. La matriz, el alcance y las limitaciones de esta semana están en [docs/test-strategy.md](docs/test-strategy.md).
+
+### Semana 8: E2E, CI y reportes
+
+Las pruebas de navegador viven en `tests/e2e/` y usan Playwright con un navegador ya instalado: Edge es el valor local predeterminado y Chrome se selecciona con `E2E_BROWSER=chrome`. No ejecute `playwright install`: la configuración no descarga Chromium ni usa perfiles personales.
+
+```bash
+npm ci
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm run test:e2e
+```
+
+`npm run test:e2e` crea el build de producción y deja que Playwright inicie `next start` en `http://127.0.0.1:3000`; por ello el service worker se registra y puede servir la recarga realmente offline. Para usar Chrome en PowerShell: `$env:E2E_BROWSER = "chrome"; npm run test:e2e`. Si Edge o Chrome no están instalados, habilite uno de ellos y compruébelo con `Get-Command msedge, chrome`; no descargue navegadores mediante Playwright.
+
+El primer escenario E2E crea una captura sintética sin red, comprueba su estado `pending` y cola IndexedDB, recarga sin conexión desde el caché del service worker, restaura la conectividad y verifica `synced`, cola vacía y una única operación remota sintética idempotente. El segundo deniega `getUserMedia`, comprueba el fallback visible y guarda una inspección sin fotografía. Cada prueba usa un contexto de navegador aislado y no requiere cámara, permisos ni datos reales.
+
+Para ejecución visual conservando Edge local: `npx playwright test --headed`. Playwright genera `playwright-report/` (HTML), `test-results/e2e-junit.xml` y trazas/capturas solo ante fallo. `npm run test:coverage` genera datos V8 reales de la suite Node en `coverage/v8/` y un inventario de módulos bajo `src/` en `coverage/v8/summary.json`; no miden navegador ni se convierten en porcentajes inventados. Estas rutas se ignoran en Git. El workflow [`.github/workflows/week-08-e2e-ci.yml`](.github/workflows/week-08-e2e-ci.yml) se ejecuta en pull requests y pushes a `main`, o manualmente; realiza instalación, lint, tipos, build, pruebas con cobertura y E2E, y publica esos directorios como el artefacto `week-08-e2e-reports` incluso ante fallos. La disponibilidad remota de Chrome y el resultado del workflow se confirman solo después de una ejecución real en GitHub Actions.

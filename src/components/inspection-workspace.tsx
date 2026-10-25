@@ -291,7 +291,11 @@ export function InspectionWorkspace() {
         </button>
         {isCapturing && <button type="button" onClick={cancelPhotoCapture}>Cancelar captura</button>}
         {photoEvidence && <button type="button" onClick={discardPhotoEvidence}>Descartar evidencia</button>}
-        {photoPreviewUrl && <img src={photoPreviewUrl} alt="Vista previa de la evidencia fotográfica capturada" />}
+        {photoPreviewUrl && (
+          // La imagen es un Blob temporal local; no requiere el optimizador remoto de Next.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={photoPreviewUrl} alt="Vista previa de la evidencia fotográfica capturada" />
+        )}
         <p role="status" className="muted">{photoMessage}</p>
         {photoError && <p role="alert" className="state-error">{photoError}</p>}
       </section>

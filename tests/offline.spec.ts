@@ -63,10 +63,18 @@ const navigation = (path: string) => ({ url: `${origin}${path}`, method: "GET", 
 {
   const runtime = createRuntime(async () => { throw new TypeError("synthetic navigation outage"); });
   const requested = navigation("/synthetic-incident-001");
-  await (await runtime.caches.open("pwa-runtime-w03-v1")).put(requested, basicResponse("synthetic cached navigation"));
+  await (await runtime.caches.open("pwa-runtime-w08-v1")).put(requested, basicResponse("synthetic cached navigation"));
   const response = await runFetch(runtime, requested);
   assert.equal(response.status, 200, "un fallo de red de navegación debe recuperarse desde la cache solicitada");
   assert.equal(await response.text(), "synthetic cached navigation");
+}
+
+{
+  const runtime = createRuntime(async () => { throw new TypeError("synthetic navigation outage"); });
+  await (await runtime.caches.open("pwa-precache-w08-v1")).put("/", basicResponse("root shell"));
+  const response = await runFetch(runtime, navigation("/inspecciones"));
+  assert.equal(response.status, 503, "una navegación offline sin su propia copia no debe recibir HTML de otra ruta");
+  assert.equal(response.headers.get("X-Offline-Fallback"), "true");
 }
 
 {
@@ -86,11 +94,22 @@ const navigation = (path: string) => ({ url: `${origin}${path}`, method: "GET", 
     if (!recoveredOnce) { recoveredOnce = true; return recovered; }
     throw new Error("not used");
   });
-  const prior = await runtime.caches.open("pwa-runtime-w03-v1");
+  const prior = await runtime.caches.open("pwa-runtime-w08-v1");
   const priorResponse = await prior.match(requested);
-  await (await recoveredRuntime.caches.open("pwa-runtime-w03-v1")).put(requested, priorResponse!);
+  await (await recoveredRuntime.caches.open("pwa-runtime-w08-v1")).put(requested, priorResponse!);
   assert.equal(await (await runFetch(recoveredRuntime, requested)).text(), "synthetic fresh v2", "al recuperar red, network-first debe entregar una respuesta fresca");
-  assert.equal(await (await (await recoveredRuntime.caches.open("pwa-runtime-w03-v1")).match(requested))!.text(), "synthetic fresh v2");
+  assert.equal(await (await (await recoveredRuntime.caches.open("pwa-runtime-w08-v1")).match(requested))!.text(), "synthetic fresh v2");
+}
+
+{
+  let version = "v1";
+  const runtime = createRuntime(async () => basicResponse(`synthetic inspection shell ${version}`, { headers: { "cache-control": "private, no-store" } }));
+  const requested = navigation("/inspecciones");
+  assert.equal(await (await runFetch(runtime, requested)).text(), "synthetic inspection shell v1");
+  version = "v2";
+  assert.equal(await (await runFetch(runtime, requested)).text(), "synthetic inspection shell v2", "la visita online debe actualizar el shell cuando cambia el build");
+  const cache = await runtime.caches.open("pwa-runtime-w08-v1");
+  assert.equal(await (await (await cache.match(requested))!).text(), "synthetic inspection shell v2");
 }
 
 {
@@ -102,7 +121,7 @@ const navigation = (path: string) => ({ url: `${origin}${path}`, method: "GET", 
   const requested = navigation("/synthetic-invalid-response");
   const failedResponse = await runFetch(runtime, requested);
   assert.equal(failedResponse.status, 500, "la respuesta de red inválida se entrega, pero no debe persistirse");
-  const cache = await runtime.caches.open("pwa-runtime-w03-v1");
+  const cache = await runtime.caches.open("pwa-runtime-w08-v1");
   assert.equal(await cache.match(requested), undefined, "una respuesta HTTP no exitosa no debe corromper runtime cache");
   const fallback = await runFetch(runtime, requested);
   assert.ok(fallback, "un fallo de red sin cache válida debe producir el fallback offline, no undefined");

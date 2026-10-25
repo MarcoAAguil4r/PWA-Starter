@@ -6,7 +6,7 @@ import vm from "node:vm";
 const root = resolve(import.meta.dirname, "..");
 const workerSource = readFileSync(resolve(root, "public/sw.js"), "utf8");
 const origin = "https://pwa.synthetic";
-const precacheUrls = ["/", "/manifest.webmanifest", "/icons/icon-192x192.png", "/icons/icon-512x512.png"];
+const precacheUrls = ["/", "/inspecciones", "/manifest.webmanifest", "/icons/icon-192x192.png", "/icons/icon-512x512.png"];
 
 const keyFor = (request: string | { url: string }) => new URL(typeof request === "string" ? request : request.url, origin).href;
 const basicResponse = (body: string, init: ResponseInit = {}) => {
@@ -78,7 +78,7 @@ async function runFetch(runtime: ReturnType<typeof createRuntime>, request: Requ
     return basicResponse(`synthetic precache: ${request.url}`);
   });
   await runLifecycle(runtime, "install");
-  const cache = await runtime.caches.open("pwa-precache-w03-v1");
+  const cache = await runtime.caches.open("pwa-precache-w08-v1");
   assert.deepEqual(downloaded, precacheUrls, "install debe descargar exactamente los recursos del precache real");
   for (const url of precacheUrls) assert.ok(await cache.match(url), `${url} debe quedar disponible después de install`);
 }
@@ -89,7 +89,7 @@ async function runFetch(runtime: ReturnType<typeof createRuntime>, request: Requ
     return basicResponse("synthetic precache response");
   });
   await assert.rejects(runLifecycle(runtime, "install"), /synthetic precache outage/);
-  const cache = await runtime.caches.open("pwa-precache-w03-v1");
+  const cache = await runtime.caches.open("pwa-precache-w08-v1");
   for (const url of precacheUrls) assert.equal(await cache.match(url), undefined, "un precache incompleto no debe conservar recursos parciales");
 }
 
@@ -104,14 +104,14 @@ async function runFetch(runtime: ReturnType<typeof createRuntime>, request: Requ
   assert.equal(await (await runFetch(runtime, request)).text(), "synthetic runtime asset");
   assert.equal(await (await runFetch(runtime, request)).text(), "synthetic runtime asset");
   assert.equal(networkCalls, 1, "un recurso estático cacheado debe usar la estrategia cache-first");
-  const runtimeCache = await runtime.caches.open("pwa-runtime-w03-v1");
+  const runtimeCache = await runtime.caches.open("pwa-runtime-w08-v1");
   assert.ok(await runtimeCache.match(request), "la respuesta estática válida debe quedar en runtime cache");
 }
 
 {
   const runtime = createRuntime(workerSource, async () => basicResponse("synthetic version response"));
-  await (await runtime.caches.open("pwa-precache-w03-old")).put("/synthetic-old", basicResponse("old"));
-  await (await runtime.caches.open("pwa-runtime-w03-old")).put("/synthetic-old", basicResponse("old"));
+  await (await runtime.caches.open("pwa-precache-w08-old")).put("/synthetic-old", basicResponse("old"));
+  await (await runtime.caches.open("pwa-runtime-w08-old")).put("/synthetic-old", basicResponse("old"));
   await (await runtime.caches.open("foreign-synthetic-cache")).put("/synthetic", basicResponse("keep"));
   await runLifecycle(runtime, "activate");
   assert.deepEqual(await runtime.caches.keys(), ["foreign-synthetic-cache"], "activate debe invalidar sólo caches obsoletos propios");
@@ -119,16 +119,41 @@ async function runFetch(runtime: ReturnType<typeof createRuntime>, request: Requ
 }
 
 {
-  const upgradedSource = workerSource.replace('const CACHE_VERSION = "w03-v1";', 'const CACHE_VERSION = "w03-synthetic-v2";');
+  const upgradedSource = workerSource.replace('const CACHE_VERSION = "w08-v1";', 'const CACHE_VERSION = "w08-synthetic-v2";');
   assert.notEqual(upgradedSource, workerSource, "la prueba debe poder simular una nueva versión del worker");
   const runtime = createRuntime(upgradedSource, async () => basicResponse("synthetic upgraded precache"));
-  await (await runtime.caches.open("pwa-precache-w03-v1")).put("/", basicResponse("old shell"));
-  await (await runtime.caches.open("pwa-runtime-w03-v1")).put("/synthetic", basicResponse("old runtime"));
+  await (await runtime.caches.open("pwa-precache-w08-v1")).put("/", basicResponse("old shell"));
+  await (await runtime.caches.open("pwa-runtime-w08-v1")).put("/synthetic", basicResponse("old runtime"));
   await runLifecycle(runtime, "install");
   await runLifecycle(runtime, "activate");
-  assert.ok((await runtime.caches.keys()).includes("pwa-precache-w03-synthetic-v2"));
-  assert.ok(!(await runtime.caches.keys()).includes("pwa-precache-w03-v1"), "una versión nueva debe retirar su precache anterior");
-  assert.ok(!(await runtime.caches.keys()).includes("pwa-runtime-w03-v1"), "una versión nueva debe retirar su runtime cache anterior");
+  assert.ok((await runtime.caches.keys()).includes("pwa-precache-w08-synthetic-v2"));
+  assert.ok(!(await runtime.caches.keys()).includes("pwa-precache-w08-v1"), "una versión nueva debe retirar su precache anterior");
+  assert.ok(!(await runtime.caches.keys()).includes("pwa-runtime-w08-v1"), "una versión nueva debe retirar su runtime cache anterior");
+}
+
+{
+  const staticChunk = "/_next/static/chunks/app/page-build-specific.js";
+  const runtime = createRuntime(workerSource, async (request) => {
+    const path = new URL(request.url).pathname;
+    return basicResponse(path === "/inspecciones"
+      ? `<script src="${staticChunk}"></script><link href="/_next/static/css/build-specific.css" rel="stylesheet">`
+      : `synthetic resource: ${path}`);
+  });
+  await runLifecycle(runtime, "install");
+  const cache = await runtime.caches.open("pwa-precache-w08-v1");
+  assert.ok(await cache.match(staticChunk), "install debe descubrir y precachear chunks estáticos de Next sin fijar sus hashes");
+  assert.ok(await cache.match("/_next/static/css/build-specific.css"), "install debe precachear CSS estático descubierto");
+}
+
+{
+  const runtime = createRuntime(workerSource, async (request) => {
+    const path = new URL(request.url).pathname;
+    const headers = path === "/inspecciones" ? { "cache-control": "private, no-store" } : {};
+    return basicResponse("synthetic shell", { headers });
+  });
+  await runLifecycle(runtime, "install");
+  const cache = await runtime.caches.open("pwa-precache-w08-v1");
+  assert.ok(await cache.match("/inspecciones"), "el shell sintético explícito debe poder arrancar offline aunque Next lo entregue como dinámico");
 }
 
 console.log("service-worker.spec.ts: PASS (instalación, precache, runtime, actualización e invalidación)");

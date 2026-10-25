@@ -13,9 +13,9 @@ Se encontró un bloqueo preexistente fuera de la validación de captura: `/manif
 | Riesgo | Capa elegida | Comprobación y aserción útil | Estado en este frente |
 | --- | --- | --- | --- |
 | Captura inválida | Unitaria | `tests/unit/capture-validation.spec.ts` comprueba datos válidos, normalización, ubicación/responsable/resumen vacíos, longitudes máximas aceptadas (120/120/500) y excedidas, hallazgos negativos/no numéricos/fraccionarios/fuera del rango seguro. La misma función es consumida por el formulario. | Implementada |
-| Persistencia y reconexión | Integración y E2E | Guardar sin red debe conservar la inspección en IndexedDB después de recargar; al volver la red, debe cambiar a sincronizada. La prueba debe aislar IndexedDB y controlar la respuesta remota. | Pendiente de los frentes de integración/E2E |
-| Duplicado de sincronización | Unitaria e integración | La regla de idempotencia debe deduplicar la misma operación; una integración debe reintentar contra una respuesta remota controlada y asertar una sola inspección. La prueba debe fallar al retirar temporalmente esa protección. | La suite previa de sincronización ya prueba la cola; la evidencia de integración y defecto controlado está pendiente |
-| Permiso de capacidad del dispositivo no disponible | E2E | Simular permiso denegado o capacidad ausente desde la interfaz y comprobar que se puede guardar la captura sin depender del dispositivo del evaluador. | Pendiente del frente E2E |
+| Persistencia y reconexión | Integración y E2E | `tests/e2e/inspection-workspace.spec.ts` guarda sin red, confirma `pending` y la operación IndexedDB, recarga la ruta sin red desde el caché del worker y, al reconectar, observa `synced` y cola vacía. | Implementada; requiere Edge o Chrome ya instalado para ejecutarse. |
+| Duplicado de sincronización | Unitaria, integración y E2E | La regla de idempotencia deduplica una misma operación. El escenario E2E intercepta el transporte HTTP con un remoto sintético que conserva la operación por clave y confirma una sola entrada tras pulsar de nuevo sincronizar. | Implementada en las tres capas; el remoto E2E es un fixture de prueba, no un backend persistente. |
+| Permiso de capacidad del dispositivo no disponible | E2E | El escenario E2E reemplaza `getUserMedia` con `NotAllowedError`, espera el fallback visible y guarda una captura sin fotografía. | Implementada; no depende de cámara ni permiso físico. |
 
 Las pruebas unitarias hacen rápida y determinista la comprobación de reglas puras. La integración debe cubrir la frontera IndexedDB/cola/transporte, donde se originan persistencia e idempotencia reales. E2E se reserva para el comportamiento observable desde la interfaz, incluidas recarga, conectividad y fallback de capacidades; buscar nombres o textos en el código no demuestra esos flujos.
 
@@ -27,11 +27,15 @@ node tests/unit/capture-validation.spec.ts
 npm test
 npm run build
 npm run dev
+npm run lint
+npm run typecheck
+npm run test:coverage
+npm run test:e2e
 ```
 
-`npm test` ejecuta todas las suites registradas, incluida la nueva prueba unitaria. `npm run build` verifica la compilación de producción y el chequeo TypeScript realizado por Next.js. `npm run dev` inicia la aplicación para inspección manual en `http://localhost:3000`; se detiene con Ctrl+C. El proyecto todavía no declara un comando independiente de lint ni un flujo E2E de navegador en este frente. La configuración común de CI y los reportes de integración/E2E corresponden a los otros frentes; no se consideran completados por esta prueba unitaria.
+`npm test` ejecuta todas las suites registradas, incluida la nueva prueba unitaria. `npm run build` verifica la compilación de producción y el chequeo TypeScript realizado por Next.js. `npm run dev` inicia la aplicación para inspección manual en `http://localhost:3000`; se detiene con Ctrl+C. `npm run lint` y `npm run typecheck` son puertas independientes. `npm run test:e2e` crea primero el build de producción porque el worker sólo se registra fuera de desarrollo; requiere Edge (predeterminado) o Chrome existentes y no descarga navegadores. Para observar los pasos en Edge se puede usar `npx playwright test --headed` después del build.
 
-La prueba de validación comprueba la regla que usa el formulario, pero no prueba guardar en IndexedDB, recargar, sincronizar ni permisos de dispositivo. Esos resultados requieren sus pruebas de integración/E2E. La corrección del manifest cubre el conflicto de ruta con una prueba del objeto de configuración; la respuesta HTTP 200 se confirmó en desarrollo.
+La prueba de validación comprueba la regla que usa el formulario, pero no prueba guardar en IndexedDB, recargar, sincronizar ni permisos de dispositivo. Esos resultados se cubren además por integración y E2E. La corrección del manifest cubre el conflicto de ruta con una prueba del objeto de configuración; la respuesta HTTP 200 se confirmó en desarrollo. `npm run test:coverage` conserva datos V8 reales de la suite Node en `coverage/v8/` y genera `summary.json` con registros de rangos ejecutados por módulos de `src/`; excluye pruebas, dependencias y navegador, por lo que no representa cobertura E2E ni declara porcentajes.
 
 ## Resultado verificado
 
