@@ -310,3 +310,15 @@ Este PR no implementa E2E ni CI; solo deja documentados los comportamientos que 
 - **Limitaciones y pendientes:** el remoto E2E usa datos/respuestas sintéticas, no un servidor productivo externo ni sincronización entre dispositivos. La compatibilidad con navegadores distintos de Edge/Chrome requiere ejecuciones adicionales si no se realizan. GitHub Actions sigue pendiente de incorporación, push y ejecución real; también están pendientes URL de PR, URL de Actions/artefactos, SHA final de `main` y tag final de Semana 8.
 - **Uso de IA:** utilicé Codex para implementación y revisión técnica. ChatGPT apoyó la interpretación de resultados, diagnóstico y planificación. David debe revisar los cambios y conservar la responsabilidad de las verificaciones y la entrega.
 
+## Semana 9
+
+### Marco Antonio Aguilar Castillo — Integrante 1
+
+- **Matrícula y rama:** 3523110229; `week9-marco`.
+- **Commit SHA evaluado:** pendiente de commit e integración. El `HEAD` base es `3310a1117d7ba4183fa111ef9e1f63393711eb04`; no representa el árbol de trabajo actual.
+- **Contribución concreta:** documenté activos, límites de confianza, amenazas, controles y riesgos residuales en [`docs/threat-model.md`](../docs/threat-model.md). Implementé validación de campos y lectura de JSON con límite de 16 KiB en [`input-validation.ts`](../src/lib/security/input-validation.ts), conecté los controles al esquema compartido y al endpoint de sincronización, y añadí [`security.spec.ts`](../tests/security.spec.ts) al comando `npm test`.
+- **Decisión técnica que puedo explicar:** aplicar el límite mientras se lee el stream permite rechazar cuerpos sobredimensionados antes del parseo y evita depender solamente de `Content-Length`. Después, el esquema compartido valida los campos y sus longitudes para que IndexedDB y el endpoint usen las mismas reglas.
+- **Pruebas/comandos ejecutados y resultados:** `node tests/security.spec.ts` PASS; `npm test` PASS; `npm run lint` PASS; `npm run typecheck` PASS; `npm run verify` PASS (`Verificación técnica: pass`, código 0); `git diff --check` PASS.
+- **Qué demuestra y qué no demuestra:** las pruebas ejercitan entradas sintéticas válidas e inválidas, campos sobre límite, JSON malformado y cuerpo superior a 16 KiB. El conjunto completo confirma que los cambios compilan y preservan las pruebas existentes. No demuestra el despliegue productivo, HTTPS, CSP activa, autenticación ni autorización.
+- **Limitación o fallo diagnosticado:** la evidencia local no es un SHA integrado porque el trabajo sigue sin confirmar. No pude ejecutar `bash "docs/semana 9/public-tests/check.sh"`: el entorno respondió que no encuentra `/bin/bash`. Faltan además entregables de otros integrantes (`docs/privacy-data-inventory.md` y `public/robots.txt`), así que el contrato completo de Semana 9 queda pendiente.
+- **Uso declarado de IA:** utilicé GitHub Copilot como apoyo de inspección, implementación, pruebas y redacción. Revisé el código y los resultados de los comandos; declaré los límites de las comprobaciones y no atribuí a mi trabajo los entregables pendientes de los demás integrantes.
