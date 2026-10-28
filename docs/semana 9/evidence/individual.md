@@ -4,7 +4,7 @@
 
 - **Matrícula:** 3523110229.
 - **Rama de trabajo:** `week9-marco`.
-- **Commit SHA evaluado:** pendiente de commit e integración. El reporte local se generó sobre `3310a1117d7ba4183fa111ef9e1f63393711eb04`, que es el `HEAD` base y no contiene los cambios sin confirmar.
+- **Commit SHA de implementación evaluado:** `6a29f3fe626291b3bcbc5d1c88c36eaa8069ae7e`. Este SHA contiene la implementación y las pruebas; el presente registro de evidencia se actualiza en el commit siguiente.
 - **Contribución concreta:** elaboré [`docs/threat-model.md`](../../threat-model.md) para identificar activos, límites de confianza, actores, amenazas, controles implementados y riesgos residuales. Implementé [`src/lib/security/input-validation.ts`](../../../src/lib/security/input-validation.ts) con límites de texto y lectura de JSON acotada a 16 KiB; apliqué estos controles al esquema de inspecciones y al endpoint `POST /api/inspections/sync`. Añadí [`tests/security.spec.ts`](../../../tests/security.spec.ts) y lo incorporé al comando `npm test`.
 - **Decisión técnica que puedo explicar:** validar la forma y longitud de cada campo no limita por sí solo el costo de leer un cuerpo HTTP grande. Por eso el endpoint consume el stream en fragmentos y rechaza el cuerpo tan pronto supera 16 KiB (HTTP 413), antes de parsearlo. Después valida la operación con el esquema compartido; JSON inválido y operaciones inválidas se rechazan con HTTP 400. La prueba separa entradas de texto válidas e inválidas, JSON malformado y cuerpo sobredimensionado.
 - **Comandos ejecutados y resultados observados:**

@@ -315,7 +315,7 @@ Este PR no implementa E2E ni CI; solo deja documentados los comportamientos que 
 ### Marco Antonio Aguilar Castillo — Integrante 1
 
 - **Matrícula y rama:** 3523110229; `week9-marco`.
-- **Commit SHA evaluado:** pendiente de commit e integración. El `HEAD` base es `3310a1117d7ba4183fa111ef9e1f63393711eb04`; no representa el árbol de trabajo actual.
+- **Commit SHA de implementación evaluado:** `6a29f3fe626291b3bcbc5d1c88c36eaa8069ae7e`. Este SHA contiene la implementación y las pruebas; esta actualización de evidencia queda registrada en el commit siguiente.
 - **Contribución concreta:** documenté activos, límites de confianza, amenazas, controles y riesgos residuales en [`docs/threat-model.md`](../docs/threat-model.md). Implementé validación de campos y lectura de JSON con límite de 16 KiB en [`input-validation.ts`](../src/lib/security/input-validation.ts), conecté los controles al esquema compartido y al endpoint de sincronización, y añadí [`security.spec.ts`](../tests/security.spec.ts) al comando `npm test`.
 - **Decisión técnica que puedo explicar:** aplicar el límite mientras se lee el stream permite rechazar cuerpos sobredimensionados antes del parseo y evita depender solamente de `Content-Length`. Después, el esquema compartido valida los campos y sus longitudes para que IndexedDB y el endpoint usen las mismas reglas.
 - **Pruebas/comandos ejecutados y resultados:** `node tests/security.spec.ts` PASS; `npm test` PASS; `npm run lint` PASS; `npm run typecheck` PASS; `npm run verify` PASS (`Verificación técnica: pass`, código 0); `git diff --check` PASS.
