@@ -154,3 +154,12 @@ npm run test:e2e
 El primer escenario E2E crea una captura sintética sin red, comprueba su estado `pending` y cola IndexedDB, recarga sin conexión desde el caché del service worker, restaura la conectividad y verifica `synced`, cola vacía y una única operación remota sintética idempotente. El segundo deniega `getUserMedia`, comprueba el fallback visible y guarda una inspección sin fotografía. Cada prueba usa un contexto de navegador aislado y no requiere cámara, permisos ni datos reales.
 
 Para ejecución visual conservando Edge local: `npx playwright test --headed`. Playwright genera `playwright-report/` (HTML), `test-results/e2e-junit.xml` y trazas/capturas solo ante fallo. `npm run test:coverage` genera datos V8 reales de la suite Node en `coverage/v8/` y un inventario de módulos bajo `src/` en `coverage/v8/summary.json`; no miden navegador ni se convierten en porcentajes inventados. Estas rutas se ignoran en Git. El workflow [`.github/workflows/week-08-e2e-ci.yml`](.github/workflows/week-08-e2e-ci.yml) se ejecuta en pull requests y pushes a `main`, o manualmente; realiza instalación, lint, tipos, build, pruebas con cobertura y E2E, y publica esos directorios como el artefacto `week-08-e2e-reports` incluso ante fallos. La disponibilidad remota de Chrome y el resultado del workflow se confirman solo después de una ejecución real en GitHub Actions.
+
+### Semana 9: modelo de amenazas y privacidad
+
+- Modelo de amenazas: [docs/threat-model.md](docs/threat-model.md)
+- Inventario de datos y finalidades (solo sintéticos): [docs/privacy-data-inventory.md](docs/privacy-data-inventory.md)
+- Controles de entrada: `src/lib/security/`
+- Pruebas: `node tests/security.spec.ts` (incluido en `npm test`)
+
+La demo no usa PII real ni secretos. IndexedDB no es almacenamiento secreto. En despliegue se exige HTTPS; el entorno local no sustituye TLS de producción. CSP/headers de producción deben validarse en el hosting.
