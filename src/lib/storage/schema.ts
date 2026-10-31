@@ -1,4 +1,5 @@
 import type { Inspection } from "../data/inspections";
+import { isBoundedText, SECURITY_INPUT_LIMITS } from "../security/input-validation.ts";
 
 export const INSPECTION_DATABASE_NAME = "pwa-inspections";
 export const INSPECTION_DATABASE_VERSION = 1;
@@ -50,9 +51,6 @@ export type InspectionConflict = {
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null;
 
-const isNonEmptyString = (value: unknown): value is string =>
-  typeof value === "string" && value.trim().length > 0;
-
 const isRevision = (value: unknown): value is number =>
   Number.isSafeInteger(value) && (value as number) >= 0;
 
@@ -79,15 +77,15 @@ export function isInspection(value: unknown): value is Inspection {
   if (!isRecord(value)) return false;
 
   return (
-    isNonEmptyString(value.id) &&
-    isNonEmptyString(value.location) &&
+    isBoundedText(value.id, SECURITY_INPUT_LIMITS.inspectionId) &&
+    isBoundedText(value.location, SECURITY_INPUT_LIMITS.location) &&
     isCalendarDate(value.date) &&
-    isNonEmptyString(value.inspector) &&
+    isBoundedText(value.inspector, SECURITY_INPUT_LIMITS.inspector) &&
     (value.status === "ok" || value.status === "attention") &&
-    typeof value.statusLabel === "string" &&
+    isBoundedText(value.statusLabel, SECURITY_INPUT_LIMITS.statusLabel) &&
     Number.isSafeInteger(value.findings) &&
     (value.findings as number) >= 0 &&
-    typeof value.summary === "string"
+    isBoundedText(value.summary, SECURITY_INPUT_LIMITS.summary)
   );
 }
 
@@ -101,7 +99,7 @@ export function isStoredInspection(value: unknown): value is StoredInspection {
     (value.serverRevision === null || isRevision(value.serverRevision)) &&
     (value.baseServerRevision === null || isRevision(value.baseServerRevision)) &&
     isTimestamp(value.updatedAt) &&
-    isNonEmptyString(value.idempotencyKey)
+    isBoundedText(value.idempotencyKey, SECURITY_INPUT_LIMITS.idempotencyKey)
   );
 }
 
@@ -109,7 +107,7 @@ export function isSyncOperation(value: unknown): value is SyncOperation {
   if (!isRecord(value) || !isInspection(value.payload)) return false;
 
   return (
-    isNonEmptyString(value.idempotencyKey) &&
+    isBoundedText(value.idempotencyKey, SECURITY_INPUT_LIMITS.idempotencyKey) &&
     value.inspectionId === value.payload.id &&
     (value.baseServerRevision === null || isRevision(value.baseServerRevision)) &&
     isTimestamp(value.createdAt) &&
@@ -122,8 +120,8 @@ export function isInspectionConflict(value: unknown): value is InspectionConflic
   if (!isRecord(value)) return false;
 
   return (
-    isNonEmptyString(value.conflictId) &&
-    isNonEmptyString(value.inspectionId) &&
+    isBoundedText(value.conflictId, SECURITY_INPUT_LIMITS.idempotencyKey) &&
+    isBoundedText(value.inspectionId, SECURITY_INPUT_LIMITS.inspectionId) &&
     isInspection(value.localSnapshot) &&
     value.localSnapshot.id === value.inspectionId &&
     isInspection(value.remoteSnapshot) &&

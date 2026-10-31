@@ -1,22 +1,22 @@
 import { isSyncOperation } from "../../../../lib/storage/schema";
+import { parseBoundedJsonRequest } from "../../../../lib/security/input-validation";
 import { inspectionSyncServer } from "../../../../lib/sync/synthetic-server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request): Promise<Response> {
-  let body: unknown;
-  try {
-    body = await request.json();
-  } catch {
-    return Response.json({ ok: false, retryable: false, reason: "invalid-json" }, { status: 400 });
+  const parsed = await parseBoundedJsonRequest(request);
+  if (!parsed.ok) {
+    const status = parsed.reason === "payload-too-large" ? 413 : 400;
+    return Response.json({ ok: false, retryable: false, reason: parsed.reason }, { status });
   }
 
-  if (!isSyncOperation(body)) {
+  if (!isSyncOperation(parsed.value)) {
     return Response.json({ ok: false, retryable: false, reason: "invalid-sync-operation" }, { status: 400 });
   }
 
-  const result = inspectionSyncServer.apply(body);
+  const result = inspectionSyncServer.apply(parsed.value);
   if (!result.ok && !result.retryable) {
     return Response.json(result, { status: 409 });
   }
