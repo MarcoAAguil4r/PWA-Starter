@@ -162,4 +162,21 @@ Para ejecución visual conservando Edge local: `npx playwright test --headed`. P
 - Controles de entrada: `src/lib/security/`
 - Pruebas: `node tests/security.spec.ts` (incluido en `npm test`)
 
+La política de rastreadores está en [`public/robots.txt`](public/robots.txt): permite las páginas públicas de la demo y solicita no rastrear `/api/`. `robots.txt` es una indicación para rastreadores cooperativos; no es autenticación, autorización ni una protección de datos. La foto opcional permanece sólo en memoria: no se adjunta al registro, no se guarda en IndexedDB ni se sincroniza, y se libera al guardar, descartar o cancelar.
+
 La demo no usa PII real ni secretos. IndexedDB no es almacenamiento secreto. En despliegue se exige HTTPS; el entorno local no sustituye TLS de producción. CSP/headers de producción deben validarse en el hosting.
+
+Para la comprobación de Semana 9 desde la raíz:
+
+```bash
+npm ci
+npm run lint
+npm run typecheck
+node tests/security.spec.ts
+npm test
+npm run build
+make verify
+bash "docs/semana 9/public-tests/check.sh"
+```
+
+`make verify` ejecuta la verificación estructural, la suite, el build, las comprobaciones públicas de Semanas 5, 6 y 9, y la medición de renderizado. La comprobación pública de Semana 9 usa una búsqueda global de términos relacionados con credenciales; sus coincidencias deben revisarse como posibles comentarios, documentación o fixtures sintéticos, nunca tratarse automáticamente como credenciales reales.

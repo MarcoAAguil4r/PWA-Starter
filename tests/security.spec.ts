@@ -32,6 +32,14 @@ assert.equal(
   isInspection({ ...validInspection, summary: "S".repeat(SECURITY_INPUT_LIMITS.summary + 1) }),
   false
 );
+assert.equal(
+  isInspection({ ...validInspection, inspector: "I".repeat(SECURITY_INPUT_LIMITS.inspector) }),
+  true
+);
+assert.equal(isInspection({ ...validInspection, date: "2026-02-30" }), false);
+assert.equal(isInspection({ ...validInspection, status: "unknown" }), false);
+assert.equal(isInspection({ ...validInspection, findings: -1 }), false);
+assert.equal(isInspection({ ...validInspection, findings: 0.5 }), false);
 assert.equal(isInspection({ ...validInspection, statusLabel: "" }), false);
 
 const validJsonRequest = new Request("https://example.test/sync", {
@@ -62,11 +70,12 @@ assert.deepEqual(await parseBoundedJsonRequest(oversizedRequest), {
   reason: "payload-too-large"
 });
 
-// Privacidad / minimización: el esquema de inspección no acepta campos arbitrarios
-// como si fueran parte del contrato (solo se valida la forma conocida).
+// isInspection es un predicado de forma: actualmente tolera propiedades adicionales.
+// No las elimina ni esta aceptación demuestra minimización o saneamiento de datos.
 assert.equal(isInspection({ ...validInspection, email: "persona@ejemplo.com" }), true);
-// Nota: isInspection puede ignorar propiedades extra; lo crítico es que los
-// campos obligatorios sigan acotados y no se exijan identificadores personales.
+// El flujo de captura sólo construye los campos del formulario, pero cualquier
+// frontera que reciba objetos arbitrarios debe decidir explícitamente qué hacer
+// con propiedades extra antes de persistirlas.
 assert.equal(
   isInspection({
     id: "x",
