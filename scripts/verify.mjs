@@ -74,6 +74,28 @@ if (!bash) {
     error: publicCheckW06.error?.message ?? null
   });
 }
+console.log("\nVerificando contrato público de Semana 9...");
+if (!bash) {
+  const error = process.env.PWA_BASH_PATH
+    ? `PWA_BASH_PATH no apunta a un ejecutable existente: ${process.env.PWA_BASH_PATH}`
+    : "No se encontró Bash. Instale Git Bash, configure PWA_BASH_PATH con su ejecutable o ejecute la verificación en un sistema con Bash.";
+  console.error(error);
+  checks.push({ id: "week-09-public-check", status: "fail", exitCode: null, error });
+} else {
+  const publicCheckW09 = spawnSync(bash, ["docs/semana 9/public-tests/check.sh"], {
+    cwd: root,
+    encoding: "utf8",
+    maxBuffer: 20 * 1024 * 1024
+  });
+  if (publicCheckW09.stdout) process.stdout.write(publicCheckW09.stdout);
+  if (publicCheckW09.stderr) process.stderr.write(publicCheckW09.stderr);
+  checks.push({
+    id: "week-09-public-check",
+    status: publicCheckW09.status === 0 && !publicCheckW09.error ? "pass" : "fail",
+    exitCode: publicCheckW09.status,
+    error: publicCheckW09.error?.message ?? null
+  });
+}
 if (checks.find(check => check.id === "build")?.status === "pass") {
   console.log("\nMidiendo respuestas SSR y CSR...");
   const run = spawnSync(npm, ["run", "measure:rendering"], { cwd: root, encoding: "utf8", shell: process.platform === "win32", maxBuffer: 20 * 1024 * 1024 });

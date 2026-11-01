@@ -1,0 +1,5 @@
+# Política para la demo académica de inspecciones con datos sintéticos.
+# Los rastreadores pueden consultar las páginas públicas, pero no la API de sincronización.
+User-agent: *
+Allow: /
+Disallow: /api/

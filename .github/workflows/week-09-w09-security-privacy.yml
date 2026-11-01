@@ -17,11 +17,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Setup 1
+      - name: Install dependencies
         shell: bash
         run: |
           set -euo pipefail
           npm ci --ignore-scripts --no-audit --no-fund
+      - name: Lint
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run lint
+      - name: Type check
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run typecheck
       - name: AC-01 - Instalación limpia y build completan.
         shell: bash
         run: |
@@ -37,6 +47,11 @@ jobs:
         run: |
           set -euo pipefail
           test -d tests && find tests -type f -print -quit | grep -q . && npm run test --if-present -- --run
+      - name: Generate local verification report
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run verify
       - name: Upload evaluation artifacts
         if: always()
         uses: actions/upload-artifact@v4
@@ -45,5 +60,6 @@ jobs:
           if-no-files-found: ignore
           path: |
             evaluation-result.json
+            reports/
             coverage/
             test-results/
