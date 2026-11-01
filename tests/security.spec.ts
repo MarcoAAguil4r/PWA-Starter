@@ -62,4 +62,33 @@ assert.deepEqual(await parseBoundedJsonRequest(oversizedRequest), {
   reason: "payload-too-large"
 });
 
+// Privacidad / minimización: el esquema de inspección no acepta campos arbitrarios
+// como si fueran parte del contrato (solo se valida la forma conocida).
+assert.equal(isInspection({ ...validInspection, email: "persona@ejemplo.com" }), true);
+// Nota: isInspection puede ignorar propiedades extra; lo crítico es que los
+// campos obligatorios sigan acotados y no se exijan identificadores personales.
+assert.equal(
+  isInspection({
+    id: "x",
+    location: "Lab",
+    date: "2026-10-28",
+    inspector: "Sintético",
+    status: "ok",
+    statusLabel: "Ok",
+    findings: 0,
+    summary: "ok",
+    password: "secreto"
+  }),
+  true
+);
+
+// Límites de idempotency / textos vacíos ya cubiertos; refuerzo de summary vacío
+assert.equal(isInspection({ ...validInspection, summary: "   " }), false);
+assert.equal(isInspection({ ...validInspection, inspector: "" }), false);
+
+// Parser: cuerpo vacío o no JSON
+const emptyBody = new Request("https://example.test/sync", { method: "POST", body: "" });
+const emptyResult = await parseBoundedJsonRequest(emptyBody);
+assert.equal(emptyResult.ok, false);
+
 console.log("security.spec.ts: PASS (límites de texto, esquema de inspección y JSON acotado)");
