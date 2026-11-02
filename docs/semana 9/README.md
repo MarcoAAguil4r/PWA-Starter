@@ -5,3 +5,5 @@ Este ZIP contiene el contrato de la actividad, la rúbrica, los checks públicos
 Ejecuta bash public-tests/check.sh desde el repositorio de entrega y conserva el commit SHA junto con el reporte de CI.
 
 Consulta [PLAN-DE-TRABAJO.md](PLAN-DE-TRABAJO.md) para el reparto del equipo, la rama de trabajo y las ubicaciones de los entregables. Los archivos del producto van en las rutas del repositorio que indica el plan, no dentro de esta carpeta semanal. El workflow ejecutable se encuentra en `.github/workflows/week-09-w09-security-privacy.yml`; la copia bajo `docs/semana 9/.github/workflows/` es material de referencia.
+
+La entrega consolidada, el commit evaluado y la etiqueta `week-09-final` se registran en [ENTREGA-FINAL.md](ENTREGA-FINAL.md).
